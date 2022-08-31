@@ -61,6 +61,24 @@
 		}
 	}
 
+	function onLocationChange(listener) {
+		onLocationChange.current = (
+			onLocationChange.current || document.location.href
+		);
+		const observer = new MutationObserver(async () => {
+			if (onLocationChange.current !== document.location.href) {
+				onLocationChange.current = document.location.href;
+				if (listener.constructor.name === "AsyncFunction") {
+					await listener();
+				} else {
+					listener();
+				}
+			}
+		});
+		observer.observe(document.body, { childList: true, subtree: true });
+		return observer;
+	}
+
 	function isString(value) {
 	  return Object.prototype.toString.call(value) === "[object String]"
 	}
@@ -92,6 +110,8 @@
 	(async () => {
 		try {
 			const { shortcut, tabs } = await optionsTable.getAll();
+			addTabsAutomatically();
+			onLocationChange(addTabsAutomatically);
 			document.addEventListener("keydown", async (e) => {
 				try {
 					if (e.key === shortcut) {
@@ -105,6 +125,18 @@
 					console.error(error);
 				}
 			});
+
+			function addTabsAutomatically() {
+				if (
+					window.location.href.includes("/blob/") &&
+					!window.location.href.includes("ts=")
+				) {
+					window.open(
+						addTabs(window.location.href, tabs),
+						"_self",
+					);
+				}
+			}
 		} catch (error) {
 			console.error(error);
 		}

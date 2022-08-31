@@ -24,10 +24,22 @@ export function createOption(value, text, selected=false) {
 	return option;
 }
 
-export function createStyle(data) {
-	const style = tag("style");
-	style.appendChild(textNode(data));
-	return style;
+export function onLocationChange(listener) {
+	onLocationChange.current = (
+		onLocationChange.current || document.location.href
+	);
+	const observer = new MutationObserver(async () => {
+		if (onLocationChange.current !== document.location.href) {
+			onLocationChange.current = document.location.href;
+			if (listener.constructor.name === "AsyncFunction") {
+				await listener();
+			} else {
+				listener();
+			}
+		}
+	});
+	observer.observe(document.body, { childList: true, subtree: true });
+	return observer;
 }
 
 export function letters() {
