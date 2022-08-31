@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "Highest Youtube Quality",
+  "version": "1.0.4",
+  "description": "Choose the highest video quality automatically",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://www.youtube.com.br/*"
+      ],
+      "js": [
+        "src/bundle/main.js"
+      ]
+    }
+  ],
+  "options_ui": {
+    "page": "src/options.html"
+  },
+  "background": {
+    "page": "src/background.html",
+    "persistent": false
+  },
+  "permissions": [
+    "storage"
+  ]
+}

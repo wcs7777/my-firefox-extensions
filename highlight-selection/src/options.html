@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="options.css">
+</head>
+<body>
+	<form id="setOptions">
+		<label for="shortcut">Shortcut</label>
+		<input type="text" id="shortcut">
+		<label for="shortcutHighlights">Shortcut Highlights</label>
+		<input type="text" id="shortcutHighlights">
+		<label for="color">Color</label>
+		<input type="text" id="color">
+		<label for="backgroundColor">Background Color</label>
+		<input type="text" id="backgroundColor">
+		<label for="underline">Underline?</label>
+		<select id="underline">
+			<option value="true">True</option>
+			<option value="false" selected>False</option>
+		</select>
+		<label for="activated">Activated?</label>
+		<select id="activated">
+			<option value="true" selected>True</option>
+			<option value="false">False</option>
+		</select>
+		<button type="submit">Set</button>
+	</form>
+	<script type="module" src="options.js"></script>
+</body>
+</html>

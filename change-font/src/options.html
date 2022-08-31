@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="options.css">
+</head>
+<body>
+	<form id="setOptions">
+		<label for="shortcut">Shortcut (Ctrl+?)</label>
+		<input type="text" id="shortcut">
+		<label for="fontFamily">Font Family</label>
+		<input type="text" id="fontFamily">
+		<label for="fontSize">Font Size</label>
+		<input type="text" id="fontSize">
+		<label for="lineHeight">Line Height</label>
+		<input type="text" id="lineHeight">
+		<label for="activated">Activated?</label>
+		<select id="activated">
+			<option value="true" selected>True</option>
+			<option value="false">False</option>
+		</select>
+		<button type="submit">Set</button>
+	</form>
+	<hr>
+	<form id="addAutoEnableCustomFontWebsite">
+		<label for="website">Website</label>
+		<input type="text" id="website">
+		<button type="submit">Add</button>
+	</form>
+	<hr>
+	<form id="removeAutoEnableCustomFontWebsite">
+		<label for="removeWebsite">Website</label>
+		<select id="removeWebsite"></select>
+		<button type="submit">Remove</button>
+	</form>
+	<script type="module" src="options.js"></script>
+</body>
+</html>

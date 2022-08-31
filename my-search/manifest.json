@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "My Search",
+  "version": "1.0.8",
+  "description": "To use, type ']'",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "omnibox": {
+    "keyword": "]"
+  },
+  "background": {
+    "page": "src/background.html",
+    "persistent": false
+  },
+  "options_ui": {
+    "page": "src/options.html"
+  },
+  "permissions": [
+    "storage"
+  ]
+}

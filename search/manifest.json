@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "Search",
+  "version": "1.0.6",
+  "description": "Context Menu for search selected text in defined websites",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "background": {
+    "page": "src/background.html",
+    "persistent": false
+  },
+  "options_ui": {
+    "page": "src/options.html"
+  },
+  "permissions": [
+    "menus",
+    "storage"
+  ]
+}
