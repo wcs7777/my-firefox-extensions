@@ -66,11 +66,17 @@ async function main() {
 					document.addEventListener("keydown", keydownListener);
 				}
 				activated = !activated;
-				console.log(`media player control ${activated ? "" : "de"}activated`);
+				const message = (
+					`media player control ${activated ? "" : "de"}activated`
+				);
+				console.log(message);
+				showPopup(createPopup(), message, 1200);
 			} else if (e.ctrlKey && e.key.toUpperCase() === "L") {
 				e.preventDefault();
 				console.log("media controls");
-				console.log(JSON.stringify(controls, null, 4));
+				const message = JSON.stringify(controls, null, 4);
+				console.log(message);
+				showPopup(createPopup(), message, 5000);
 			}
 		});
 
