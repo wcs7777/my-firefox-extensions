@@ -1,7 +1,7 @@
 import { createStyle } from "./utils.js";
 import { optionsTable, websitesTable } from "./tables.js";
 
-const style = createStyle("a, span { pointer-events: none !important; }");
+const style = createStyle("a { pointer-events: none !important; }");
 
 (async () => {
 	try {
