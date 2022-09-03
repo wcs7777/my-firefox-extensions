@@ -251,6 +251,7 @@
 							speedRate: parseFloat(!e.ctrlKey ? speedRate : speedCtrlRate),
 							minSpeed: 0.2,
 							maxSpeed: 5.0,
+							volumeRate: 0.05,
 						});
 						if (action.includes("Speed")) {
 							showPopup(
@@ -278,6 +279,7 @@
 		speedRate,
 		minSpeed,
 		maxSpeed,
+		volumeRate,
 	}) {
 		return {
 			"begin": () => {
@@ -314,10 +316,10 @@
 				return media.playbackRate = 1;
 			},
 			"increaseVolume": () => {
-				return media.volume = min(media.volume + 0.05, 1.00);
+				return media.volume = min(media.volume + volumeRate, 1.00);
 			},
 			"decreaseVolume": () => {
-				return media.volume = max(media.volume - 0.05, 0.00);
+				return media.volume = max(media.volume - volumeRate, 0.00);
 			},
 			"toggleMute": () => {
 				return media.muted = !media.muted;
