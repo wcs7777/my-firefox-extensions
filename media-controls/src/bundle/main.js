@@ -1,66 +1,6 @@
 (function () {
 	'use strict';
 
-	class Table {
-		constructor(name="table", database) {
-			this.name = name;
-			this.database = database;
-		}
-
-		async get(key) {
-			const table = await this.getAll();
-			if (!Array.isArray(key)) {
-				return table[key];
-			} else {
-				const values = [];
-				for (const k of key) {
-					values.push(table[k]);
-				}
-				return values;
-			}
-		}
-
-		async set(key, value) {
-			let table = await this.getAll();
-			if (value !== undefined) {
-				table[key] = value;
-			} else {
-				if (Array.isArray(table)) {
-					if (Array.isArray(key)) {
-						table = [...table, ...key];
-					} else {
-						table = [...table, key];
-					}
-				} else {
-					if (typeof key === "object") {
-						table = { ...table, ...key };
-					} else {
-						table = { ...table, [key]: key };
-					}
-				}
-			}
-			return this.database.set(this.name, table);
-		}
-
-		async getAll() {
-			return await this.database.get(this.name) || {};
-		}
-
-		async getKeys() {
-			return Object.keys(await this.getAll());
-		}
-
-		async remove(key) {
-			const table = await this.getAll();
-			delete table[key];
-			return this.database.set(this.name, table);
-		}
-
-		async removeAll() {
-			return this.database.remove(this.name);
-		}
-	}
-
 	function $(selectors, target=document) {
 		return target.querySelector(selectors);
 	}
@@ -112,12 +52,64 @@
 	  return Object.prototype.toString.call(value) === "[object String]"
 	}
 
+	function toArray(value) {
+		return Array.isArray(value) ? value : [value];
+	}
+
+	function toObject(value) {
+		return typeof value === "object" ? value : { [value]: value };
+	}
+
 	function min(a, b) {
 		return a < b ? a : b;
 	}
 
 	function max(a, b) {
 		return a > b ? a : b;
+	}
+
+	class Table {
+		constructor(name="table", database) {
+			this.name = name;
+			this.database = database;
+		}
+
+		async get(key) {
+			const table = await this.getAll();
+			return !Array.isArray(key) ? table[key] : key.map((k) => table[k]);
+		}
+
+		async set(key, value) {
+			let table = await this.getAll();
+			if (value !== undefined) {
+				table[key] = value;
+			} else {
+				if (Array.isArray(table)) {
+					table = [...table, ...toArray(key)];
+				} else {
+					table = { ...table, ...toObject(key) };
+				}
+			}
+			return this.database.set(this.name, table);
+		}
+
+		async getAll() {
+			return await this.database.get(this.name) || {};
+		}
+
+		async getKeys() {
+			return Object.keys(await this.getAll());
+		}
+
+		async remove(key) {
+			const table = await this.getAll();
+			delete table[key];
+			return this.database.set(this.name, table);
+		}
+
+		async removeAll() {
+			return this.database.remove(this.name);
+		}
 	}
 
 	var localStorage = {
@@ -188,12 +180,11 @@
 				...controls.decreaseVolume,
 				...controls.toggleMute,
 			];
-			let activated = true;
+			let activated = false;
 			let currentMedia = medias[0];
 			for (const media of medias) {
 				media.addEventListener("play", () => currentMedia = media);
 			}
-			document.addEventListener("keydown", keydownListener);
 			document.addEventListener("keydown", (e) => {
 				if (e.ctrlKey && e.key.toUpperCase() === shortcut) {
 					e.preventDefault();
@@ -249,7 +240,6 @@
 				try {
 					if (validKey(e)) {
 						e.preventDefault();
-						const currentSpeed = currentMedia.playbackRate;
 						const action = Object
 							.keys(controls)
 							.find((action) => controls[action].includes(e.key));
@@ -259,9 +249,10 @@
 							key: e.key,
 							timeRate: parseFloat(!e.ctrlKey ? timeRate : timeCtrlRate),
 							speedRate: parseFloat(!e.ctrlKey ? speedRate : speedCtrlRate),
+							minSpeed: 0.2,
+							maxSpeed: 5.0,
 						});
-						if (currentSpeed !== currentMedia.playbackRate) {
-							speedThreshold(currentMedia, 0.2, 5.0);
+						if (action.includes("Speed")) {
 							showPopup(
 								createPopup(),
 								currentMedia.playbackRate.toFixed(2),
@@ -279,7 +270,15 @@
 		}
 	}
 
-	async function doAction({ media, action, key, timeRate, speedRate }) {
+	async function doAction({
+		media,
+		action,
+		key,
+		timeRate,
+		speedRate,
+		minSpeed,
+		maxSpeed,
+	}) {
 		return {
 			"begin": () => {
 				return media.currentTime = 0;
@@ -300,10 +299,16 @@
 				return media.paused ? media.play() : media.pause();
 			},
 			"increaseSpeed": () => {
-				return media.playbackRate += speedRate;
+				return media.playbackRate = min(
+					media.playbackRate + speedRate,
+					maxSpeed,
+				);
 			},
 			"decreaseSpeed": () => {
-				return media.playbackRate -= speedRate;
+				return media.playbackRate = max(
+					media.playbackRate - speedRate,
+					minSpeed,
+				);
 			},
 			"resetSpeed": () => {
 				return media.playbackRate = 1;
@@ -318,11 +323,6 @@
 				return media.muted = !media.muted;
 			},
 		}[action]();
-	}
-
-	function speedThreshold(media, minSpeed, maxSpeed) {
-		media.playbackRate = max(media.playbackRate, minSpeed);
-		media.playbackRate = min(media.playbackRate, maxSpeed);
 	}
 
 	function createPopup() {

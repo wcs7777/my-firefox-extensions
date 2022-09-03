@@ -77,6 +77,14 @@ export function isString(value) {
   return Object.prototype.toString.call(value) === "[object String]"
 }
 
+export function toArray(value) {
+	return Array.isArray(value) ? value : [value];
+}
+
+export function toObject(value) {
+	return typeof value === "object" ? value : { [value]: value };
+}
+
 export function min(a, b) {
 	return a < b ? a : b;
 }

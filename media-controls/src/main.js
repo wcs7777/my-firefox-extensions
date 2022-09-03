@@ -51,12 +51,11 @@ async function main() {
 			...controls.decreaseVolume,
 			...controls.toggleMute,
 		];
-		let activated = true;
+		let activated = false;
 		let currentMedia = medias[0];
 		for (const media of medias) {
 			media.addEventListener("play", () => currentMedia = media);
 		}
-		document.addEventListener("keydown", keydownListener);
 		document.addEventListener("keydown", (e) => {
 			if (e.ctrlKey && e.key.toUpperCase() === shortcut) {
 				e.preventDefault();
@@ -112,7 +111,6 @@ async function main() {
 			try {
 				if (validKey(e)) {
 					e.preventDefault();
-					const currentSpeed = currentMedia.playbackRate;
 					const action = Object
 						.keys(controls)
 						.find((action) => controls[action].includes(e.key));
@@ -122,9 +120,10 @@ async function main() {
 						key: e.key,
 						timeRate: parseFloat(!e.ctrlKey ? timeRate : timeCtrlRate),
 						speedRate: parseFloat(!e.ctrlKey ? speedRate : speedCtrlRate),
+						minSpeed: 0.2,
+						maxSpeed: 5.0,
 					});
-					if (currentSpeed !== currentMedia.playbackRate) {
-						speedThreshold(currentMedia, 0.2, 5.0);
+					if (action.includes("Speed")) {
 						showPopup(
 							createPopup(),
 							currentMedia.playbackRate.toFixed(2),
@@ -142,7 +141,15 @@ async function main() {
 	}
 }
 
-async function doAction({ media, action, key, timeRate, speedRate }) {
+async function doAction({
+	media,
+	action,
+	key,
+	timeRate,
+	speedRate,
+	minSpeed,
+	maxSpeed,
+}) {
 	return {
 		"begin": () => {
 			return media.currentTime = 0;
@@ -163,10 +170,16 @@ async function doAction({ media, action, key, timeRate, speedRate }) {
 			return media.paused ? media.play() : media.pause();
 		},
 		"increaseSpeed": () => {
-			return media.playbackRate += speedRate;
+			return media.playbackRate = min(
+				media.playbackRate + speedRate,
+				maxSpeed,
+			);
 		},
 		"decreaseSpeed": () => {
-			return media.playbackRate -= speedRate;
+			return media.playbackRate = max(
+				media.playbackRate - speedRate,
+				minSpeed,
+			);
 		},
 		"resetSpeed": () => {
 			return media.playbackRate = 1;
@@ -181,11 +194,6 @@ async function doAction({ media, action, key, timeRate, speedRate }) {
 			return media.muted = !media.muted;
 		},
 	}[action]();
-}
-
-function speedThreshold(media, minSpeed, maxSpeed) {
-	media.playbackRate = max(media.playbackRate, minSpeed);
-	media.playbackRate = min(media.playbackRate, maxSpeed);
 }
 
 function createPopup() {
