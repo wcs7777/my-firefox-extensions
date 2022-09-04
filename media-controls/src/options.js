@@ -43,7 +43,7 @@ element("shortcut").addEventListener("keydown", (e) => {
 		if (
 			!isNumber(e.key) &&
 			!isNavigationKey(e) &&
-			(e.key !== "." || !field.value.includes("."))
+			(e.key !== "." || field.value.includes("."))
 		) {
 			e.preventDefault();
 		}
