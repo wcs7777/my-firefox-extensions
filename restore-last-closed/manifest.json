@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "name": "Restore Last Closed",
+  "version": "1.0.0",
+  "description": "Restore last tab closed with a shortcut",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/bundle/main.js"],
+      "match_about_blank": true,
+      "all_frames": true
+    }
+  ],
+  "options_ui": {
+    "page": "src/options.html"
+  },
+  "background": {
+    "page": "src/background.html",
+    "persistent": false
+  },
+  "permissions": [
+    "storage"
+  ]
+}
