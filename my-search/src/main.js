@@ -70,7 +70,7 @@ async function onInputChangedListener(input, suggest) {
 async function onInputEnteredListener(input, disposition) {
 	try {
 		const url = (
-			/:|\/|\./.test(input) ?
+			/^https?:\/\//.test(input) ?
 			input :
 			buildSuggestion(
 				input,
