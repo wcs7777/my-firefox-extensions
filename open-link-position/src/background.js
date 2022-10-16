@@ -6,38 +6,55 @@ import { utilsTable, optionsTable } from "./tables.js";
 		await populateOptions(optionsTable);
 		await utilsTable.set(optionsTable.name, true);
 	}
-	if (!browser.runtime.onMessage.hasListener(onMessage)) {
-		browser.runtime.onMessage.addListener(onMessage);
+	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
+		browser.storage.onChanged.addListener(storageOnChanged);
 	}
+	await toggleOnCreatedListener();
 	return "Initialization finished";
 })()
 	.then(console.log)
 	.catch(console.error);
 
-async function onMessage(message) {
-	try {
-		if (message.url) {
-			const current = await currentTabIndex();
-			if (!isNaN(current)) {
-				await browser.tabs.create({
-					active: false,
-					index: current,
-					url: message.url,
-				});
-			} else {
-				return false;
-			}
+async function toggleOnCreatedListener() {
+	if (await optionsTable.get("activated")) {
+		console.log("activated");
+		if (!browser.tabs.onCreated.hasListener(onCreated)) {
+			browser.tabs.onCreated.addListener(onCreated);
 		}
-		return true;
-	} catch (error) {
-		console.error(error);
-		return false;
+	} else {
+		console.log("deactivated");
+		if (browser.tabs.onCreated.hasListener(onCreated)) {
+			browser.tabs.onCreated.removeListener(onCreated);
+		}
 	}
 }
 
-async function currentTabIndex() {
+async function storageOnChanged(changes) {
+	try {
+		if (changes[optionsTable.name]) {
+			await toggleOnCreatedListener();
+		}
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function onCreated(tab) {
+	try {
+		if (tab.openerTabId) {
+			const current = await currentTab();
+			if (current?.id === tab.openerTabId) {
+				await browser.tabs.move(tab.id, { index: current.index });
+			}
+		}
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function currentTab() {
 	const tabs = await browser.tabs.query(
 		{ currentWindow: true, active: true },
 	);
-	return tabs?.[0]?.index;
+	return tabs?.[0];
 }
