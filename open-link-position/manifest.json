@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Open Link Position",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Change the position where links are opened to the previous tab",
   "icons": {
     "48": "icons/icon.png"
