@@ -12,6 +12,12 @@ import { utilsTable, optionsTable } from "./tables.js";
 	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
 		browser.storage.onChanged.addListener(storageOnChanged);
 	}
+	if (!browser.tabs.onActivated.hasListener(onActivated)) {
+		browser.tabs.onActivated.addListener(onActivated);
+	}
+	if (!browser.tabs.onRemoved.hasListener(onRemoved)) {
+		browser.tabs.onRemoved.addListener(onRemoved);
+	}
 	await toggleOnCreatedListener();
 	return "Initialization finished";
 })()
@@ -72,6 +78,29 @@ async function onCreated(tab) {
 			const current = await currentTab();
 			if (current?.id === tab.openerTabId) {
 				await browser.tabs.move(tab.id, { index: current.index });
+			}
+		}
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function onActivated(activeInfo) {
+	try {
+		if (activeInfo.previousTabId) {
+			await utilsTable.set("previousTabId", activeInfo.previousTabId);
+		}
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function onRemoved(tabId, removeInfo) {
+	try {
+		if (!removeInfo.isWindowClosing) {
+			const previousTabId = await utilsTable.get("previousTabId");
+			if (previousTabId) {
+				await browser.tabs.update(previousTabId, { active: true });
 			}
 		}
 	} catch (error) {
