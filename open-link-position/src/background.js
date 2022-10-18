@@ -6,6 +6,9 @@ import { utilsTable, optionsTable } from "./tables.js";
 		await populateOptions(optionsTable);
 		await utilsTable.set(optionsTable.name, true);
 	}
+	if (!browser.browserAction.onClicked.hasListener(actionOnClicked)) {
+		browser.browserAction.onClicked.addListener(actionOnClicked);
+	}
 	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
 		browser.storage.onChanged.addListener(storageOnChanged);
 	}
@@ -15,17 +18,41 @@ import { utilsTable, optionsTable } from "./tables.js";
 	.then(console.log)
 	.catch(console.error);
 
+async function actionOnClicked() {
+	try {
+		await optionsTable.set(
+			"activated",
+			!await optionsTable.get("activated"),
+		);
+		await toggleOnCreatedListener();
+	} catch (error) {
+		console.error(error);
+	}
+}
+
 async function toggleOnCreatedListener() {
 	if (await optionsTable.get("activated")) {
 		console.log("activated");
 		if (!browser.tabs.onCreated.hasListener(onCreated)) {
 			browser.tabs.onCreated.addListener(onCreated);
 		}
+		await browser.browserAction.setIcon({
+			path: {
+				16: "../icons/icon-16.png",
+				32: "../icons/icon-32.png",
+			},
+		});
 	} else {
 		console.log("deactivated");
 		if (browser.tabs.onCreated.hasListener(onCreated)) {
 			browser.tabs.onCreated.removeListener(onCreated);
 		}
+		await browser.browserAction.setIcon({
+			path: {
+				16: "../icons/icon-dark-16.png",
+				32: "../icons/icon-dark-32.png",
+			},
+		});
 	}
 }
 
