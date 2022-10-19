@@ -1,6 +1,9 @@
 import populateOptions from "./populate-options.js";
 import { utilsTable, optionsTable } from "./tables.js";
 
+let listPreviousTabId = [];
+let currentTabId = 0;
+
 (async () => {
 	if (!await utilsTable.get(optionsTable.name)) {
 		await populateOptions(optionsTable);
@@ -85,23 +88,29 @@ async function onCreated(tab) {
 	}
 }
 
-async function onActivated(activeInfo) {
+async function onActivated({ tabId, previousTabId }) {
 	try {
-		if (activeInfo.previousTabId) {
-			await utilsTable.set("previousTabId", activeInfo.previousTabId);
+		if (previousTabId) {
+			currentTabId = tabId;
+			listPreviousTabId.push(previousTabId);
 		}
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-async function onRemoved(tabId, removeInfo) {
+async function onRemoved(tabId, { isWindowClosing }) {
 	try {
-		if (!removeInfo.isWindowClosing) {
-			const previousTabId = await utilsTable.get("previousTabId");
-			if (previousTabId) {
-				await browser.tabs.update(previousTabId, { active: true });
-			}
+		console.log(`tabId removed: ${tabId}`);
+		listPreviousTabId = listPreviousTabId.filter((tab) => tab !== tabId);
+		if (
+			!isWindowClosing &&
+			currentTabId === tabId &&
+			listPreviousTabId.length > 0 &&
+			true
+		) {
+			await browser.tabs.update(listPreviousTabId.pop(), { active: true });
+			listPreviousTabId.pop();
 		}
 	} catch (error) {
 		console.error(error);
