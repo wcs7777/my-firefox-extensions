@@ -12,7 +12,7 @@ import { utilsTable, optionsTable } from "./tables.js";
 	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
 		browser.storage.onChanged.addListener(storageOnChanged);
 	}
-	await toggleOnCreatedListener();
+	await updateActivated();
 	return "Initialization finished";
 })()
 	.then(console.log)
@@ -24,13 +24,13 @@ async function actionOnClicked() {
 			"activated",
 			!await optionsTable.get("activated"),
 		);
-		await toggleOnCreatedListener();
+		await updateActivated();
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-async function toggleOnCreatedListener() {
+async function updateActivated() {
 	if (await optionsTable.get("activated")) {
 		console.log("activated");
 		if (!browser.tabs.onCreated.hasListener(onCreated)) {
@@ -59,7 +59,7 @@ async function toggleOnCreatedListener() {
 async function storageOnChanged(changes) {
 	try {
 		if (changes[optionsTable.name]) {
-			await toggleOnCreatedListener();
+			await updateActivated();
 		}
 	} catch (error) {
 		console.error(error);
