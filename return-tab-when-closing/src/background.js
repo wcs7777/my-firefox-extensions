@@ -97,7 +97,8 @@ async function onRemoved(tabId, { isWindowClosing }) {
 			true
 		) {
 			await activeTab(listPreviousTabId.pop());
-			listPreviousTabId.pop();
+			listPreviousTabId.pop(); // wrong tab
+			listPreviousTabId.pop(); // current tab
 		}
 	} catch (error) {
 		console.error(error);
