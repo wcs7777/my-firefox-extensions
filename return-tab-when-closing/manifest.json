@@ -18,7 +18,7 @@
       "19": "icons/icon-19.png",
       "38": "icons/icon-38.png"
     },
-    "default_title": "Open Link Position"
+    "default_title": "Return Tab When Closing"
   },
   "permissions": [
     "storage"
