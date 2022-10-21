@@ -80,7 +80,12 @@ async function onCreated(tab) {
 		if (tab.openerTabId) {
 			const current = await currentTab();
 			if (current?.id === tab.openerTabId) {
-				await browser.tabs.move(tab.id, { index: current.index });
+				const index = (
+					await optionsTable.get("toLeft") ?
+					current.index :
+					current.index + 1
+				);
+				await moveTab(tab.id, index);
 			}
 		}
 	} catch (error) {
@@ -109,7 +114,7 @@ async function onRemoved(tabId, { isWindowClosing }) {
 			listPreviousTabId.length > 0 &&
 			true
 		) {
-			await browser.tabs.update(listPreviousTabId.pop(), { active: true });
+			await focusTab(listPreviousTabId.pop());
 			listPreviousTabId.pop();
 		}
 	} catch (error) {
@@ -122,4 +127,12 @@ async function currentTab() {
 		{ currentWindow: true, active: true },
 	);
 	return tabs?.[0];
+}
+
+function moveTab(id, index) {
+	return browser.tabs.move(id, { index });
+}
+
+function focusTab(id) {
+	return browser.tabs.update(id, { active: true });
 }

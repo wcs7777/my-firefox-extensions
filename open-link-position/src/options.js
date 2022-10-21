@@ -6,10 +6,10 @@ document.addEventListener("DOMContentLoaded", setFieldValues);
 element("setOptions").addEventListener("submit", async (e) => {
 	try {
 		e.preventDefault();
-		await optionsTable.set(
-			"activated",
-			element("activated").value === "true",
-		);
+		await optionsTable.set({
+			activated: element("activated").value === "true",
+			toLeft: element("toLeft").value === "true",
+		});
 		await setFieldValues();
 	} catch (error) {
 		console.error(error);
