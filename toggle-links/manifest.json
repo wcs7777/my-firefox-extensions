@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Toggle Links",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Toggle links enabling",
   "icons": {
     "48": "icons/icon.png"
