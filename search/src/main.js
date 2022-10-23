@@ -3,7 +3,20 @@ import populateParentItem from "./populate-parent-item.js";
 import populateItems from "./populate-items.js";
 import { makeUrl } from "./utils.js";
 
-const onClickedListeners = [];
+const onClickedListeners = {
+	list: [],
+
+	add(listener) {
+		this.list.push(listener);
+		browser.menus.onClicked.addListener(listener);
+	},
+
+	removeAll() {
+		while (this.list.length > 0) {
+			browser.menus.onClicked.removeListener(this.list.pop());
+		}
+	},
+};
 
 (async () => {
 	await utilsTable.set({ textSlot: "$", spaceReplacement: "+" });
@@ -51,25 +64,22 @@ async function storageOnChanged(changes) {
 
 async function setMenus(parentItem, items) {
 	await browser.menus.removeAll();
-	while (onClickedListeners.length > 0) {
-		browser.menus.onClicked.removeListener(onClickedListeners.pop());
-	}
-	onClickedListeners.length = 0;
+	onClickedListeners.removeAll();
 	const parentId = createParentMenuItem(
 		parentItem.accessKey,
 		parentItem.title,
 	);
 	for (const key of Object.keys(items)) {
-		const onClicked = createOnClicked(
-			createChildMenuItem(
-				parentId,
-				key,
-				items[key].title,
+		onClickedListeners.add(
+			createOnClicked(
+				createChildMenuItem(
+					parentId,
+					key,
+					items[key].title,
+				),
+				items[key],
 			),
-			items[key],
 		);
-		browser.menus.onClicked.addListener(onClicked);
-		onClickedListeners.push(onClicked);
 	}
 }
 
