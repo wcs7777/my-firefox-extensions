@@ -3,6 +3,8 @@ import populateParentItem from "./populate-parent-item.js";
 import populateItems from "./populate-items.js";
 import { makeUrl } from "./utils.js";
 
+const onClickedListeners = [];
+
 (async () => {
 	await utilsTable.set({ textSlot: "$", spaceReplacement: "+" });
 	await populate(parentItemTable, populateParentItem)
@@ -56,13 +58,19 @@ async function setMenus(parentItem, items) {
 	});
 	for (const key of Object.keys(items)) {
 		const item = items[key];
-		browser.menus.create({
+		const childId = browser.menus.create({
 			id: key,
 			title: `&${key} - ${item.title}`,
 			contexts: ["selection"],
 			parentId,
-			onclick: async (info, tab) => {
+		});
+		const onClicked = async (info, tab) => {
+			if (info.menuItemId === childId) {
 				const text = info.selectionText.trim().toLowerCase();
+				console.log("-".repeat(60));
+				console.log(`searching: ${text}`);
+				console.log(`with: ${item.title}`);
+				console.log("-".repeat(60));
 				try {
 					return await (
 						(!item.isPopup) ?
@@ -72,8 +80,10 @@ async function setMenus(parentItem, items) {
 				} catch (error) {
 					console.error(error);
 				}
-			},
-		});
+			}
+		};
+		browser.menus.onClicked.addListener(onClicked);
+		onClickedListeners.push(onClicked);
 	}
 }
 
