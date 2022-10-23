@@ -51,40 +51,61 @@ async function storageOnChanged(changes) {
 
 async function setMenus(parentItem, items) {
 	await browser.menus.removeAll();
-	const parentId = browser.menus.create({
-		id: parentItem.accessKey,
-		title: `&${parentItem.accessKey} - ${parentItem.title}`,
-		contexts: ["selection"],
-	});
+	onClickedListeners.length = 0;
+	const parentId = createParentMenuItem(
+		parentItem.accessKey,
+		parentItem.title,
+	);
 	for (const key of Object.keys(items)) {
-		const item = items[key];
-		const childId = browser.menus.create({
-			id: key,
-			title: `&${key} - ${item.title}`,
-			contexts: ["selection"],
-			parentId,
-		});
-		const onClicked = async (info, tab) => {
-			if (info.menuItemId === childId) {
-				const text = info.selectionText.trim().toLowerCase();
-				console.log("-".repeat(60));
-				console.log(`searching: ${text}`);
-				console.log(`with: ${item.title}`);
-				console.log("-".repeat(60));
-				try {
-					return await (
-						(!item.isPopup) ?
-						createTab(item, text, tab.index + 1) :
-						createPopup(item, text)
-					)
-				} catch (error) {
-					console.error(error);
-				}
-			}
-		};
+		const onClicked = createOnClicked(
+			createChildMenuItem(
+				parentId,
+				key,
+				items[key].title,
+			),
+			items[key],
+		);
 		browser.menus.onClicked.addListener(onClicked);
 		onClickedListeners.push(onClicked);
 	}
+}
+
+function createParentMenuItem(accessKey, title) {
+	return browser.menus.create({
+		id: accessKey,
+		title: `&${accessKey} - ${title}`,
+		contexts: ["selection"],
+	});
+}
+
+function createChildMenuItem(parentId, accessKey, title) {
+	return browser.menus.create({
+		id: accessKey,
+		title: `&${accessKey} - ${title}`,
+		contexts: ["selection"],
+		parentId,
+	});
+}
+
+function createOnClicked(id, item) {
+	return async (info, tab) => {
+		if (info.menuItemId === id) {
+			const text = info.selectionText.trim().toLowerCase();
+			console.log("-".repeat(60));
+			console.log(`searching: ${text}`);
+			console.log(`with: ${item.title}`);
+			console.log("-".repeat(60));
+			try {
+				return await (
+					(!item.isPopup) ?
+					createTab(item, text, tab.index + 1) :
+					createPopup(item, text)
+				)
+			} catch (error) {
+				console.error(error);
+			}
+		}
+	};
 }
 
 function createTab(item, text, index) {
