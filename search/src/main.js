@@ -51,6 +51,9 @@ async function storageOnChanged(changes) {
 
 async function setMenus(parentItem, items) {
 	await browser.menus.removeAll();
+	while (onClickedListeners.length > 0) {
+		browser.menus.onClicked.removeListener(onClickedListeners.pop());
+	}
 	onClickedListeners.length = 0;
 	const parentId = createParentMenuItem(
 		parentItem.accessKey,
