@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Github Tabs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Shortcut to change tabs on Github",
   "icons": {
     "48": "icons/icon.png"
