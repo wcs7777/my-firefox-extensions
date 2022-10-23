@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Change Font",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Shortcut for change the font of the page",
   "icons": {
     "48": "icons/icon.png"
