@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Tranquility Border",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tranquility Border",
   "icons": {
     "48": "icons/icon.png"
