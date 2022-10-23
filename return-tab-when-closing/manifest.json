@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Return Tab When Closing",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Return to the previous activated tab when a tab is closed",
   "icons": {
     "48": "icons/icon.png"
