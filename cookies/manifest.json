@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "Cookies",
+  "version": "1.0.0",
+  "description": "View and delete cookies by sites",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "background": {
+    "page": "src/background.html",
+    "persistent": true
+  },
+  "options_ui": {
+    "page": "src/options.html"
+  },
+  "permissions": [
+    "menus",
+    "storage",
+    "cookies",
+    "<all_urls>"
+  ]
+}
