@@ -1,92 +1,129 @@
-import { url2domain } from "./utils.js";
-import onClickedListener from "./on-clicked-listener.js";
+import {
+	getCookiesGroupedByUrl,
+	getCookiesByUrl,
+	removeAllCookies,
+	removeCookiesByUrl,
+} from "./cookies.js";
+import {
+	createChildMenuItem,
+	createParentMenuItem,
+	onClickedListeners,
+} from "./menu-items.js";
 
 (async () => {
-	await setMenu();
+	await setMenuItems();
 	return "Initialization finished";
 })()
 	.then(console.log)
 	.catch(console.error);
 
-async function setMenu() {
+async function setMenuItems() {
 	await browser.menus.removeAll();
-	const itemId = browser.menus.create({
-		id: "Cookies",
-		title: "Cookies",
-		contexts: ["all"],
-	});
-	onClickedListener.add(async (info, tab) => {
-		if (info.menuItemId === itemId) {
+	onClickedListeners.removeAll();
+	const parentId = createParentMenuItem("cookies", "Cookies");
+	createViewAllCookiesMenuItem(parentId);
+	createViewCurrentPageCookiesMenuItem(parentId);
+	createRemoveAllCookiesMenuItem(parentId);
+	createRemoveCurrentPageCookiesMenuItem(parentId);
+}
+
+function createViewAllCookiesMenuItem(parentId) {
+	const id = createChildMenuItem("view-all", "View All Cookies", parentId);
+	onClickedListeners.add(async (info) => {
+		if (info.menuItemId === id) {
 			try {
-				await removeAllCookies();
+				const cookiesGroupedByUrl = await getCookiesGroupedByUrl();
+				const onMessage = async (message) => {
+					if (message.getCookiesGroupedByUrl) {
+						browser.runtime.onMessage.removeListener(onMessage);
+						return cookiesGroupedByUrl;
+					}
+				};
+				browser.runtime.onMessage.addListener(onMessage);
+				await browser.windows.create({
+					url: "all-cookies.html",
+				});
 			} catch (error) {
 				console.error(error);
 			}
 		}
 	});
+	return id;
 }
 
-async function getCookiesGroupedByUrl() {
-	const cookies = {};
-	for (const url of await getAllUrls()) {
-		cookies[url] = await getCookiesByUrl(url);
-	}
-	return cookies;
+function createViewCurrentPageCookiesMenuItem(parentId) {
+	const id = createChildMenuItem(
+		"current-page-cookies",
+		"Current Page Cookies",
+		parentId,
+	);
+	onClickedListeners.add(async (info, tab) => {
+		if (info.menuItemId === id) {
+			try {
+				const cookies = await getCookiesByUrl(tab.url);
+				const onMessage = async (message) => {
+					if (message.currentPageCookies) {
+						browser.runtime.onMessage.removeListener(onMessage);
+						return { url: tab.url, cookies };
+					}
+				};
+				browser.runtime.onMessage.addListener(onMessage);
+				await browser.windows.create({
+					url: "current-page-cookies.html",
+				});
+			} catch (error) {
+				consol.error(error);
+			}
+		}
+	});
+	return id;
 }
 
-function getCookiesByUrl(url) {
-	return browser.cookies.getAll({ url });
-}
-
-async function removeAllCookies() {
-	for (const url of await getAllUrls()) {
-		removeCookiesByUrl(url)
-			.then(() => {
-				console.log(`All cookies removed in ${url}`);
-			})
-			.catch((error) => {
-				console.error(`Error removing cookies in ${url}`);
+function createRemoveAllCookiesMenuItem(parentId) {
+	const id = createChildMenuItem(
+		"remove-all-cookies",
+		"Remove All Cookies",
+		parentId,
+	);
+	onClickedListeners.add(async (info) => {
+		if (info.menuItemId === id) {
+			try {
+				await removeAllCookies();
+				await browser.windows.create({
+					url: "remove-all-cookies.html",
+				});
+			} catch (error) {
 				console.error(error);
-			});
-	}
+			}
+		}
+	});
+	return id;
 }
 
-async function removeCookiesByUrl(url) {
-	for (const { name } of await getCookiesByUrl(url)) {
-		browser.cookies.remove({ url, name })
-			.then(() => {
-				console.log(`${name} removed in ${url}`);
-			})
-			.catch((error) => {
-				console.error(`Error removing ${name} in ${url}`);
+function createRemoveCurrentPageCookiesMenuItem(parentId) {
+	const id = createChildMenuItem(
+		"remove-current-page-cookies",
+		"Remove Current Page Cookies",
+		parentId,
+	);
+	onClickedListeners.add(async (info, tab) => {
+		if (info.menuItemId === id) {
+			try {
+				await removeCookiesByUrl(tab.url);
+				const onMessage = async (message) => {
+					if (message.currentPageCookiesRemoved) {
+						browser.runtime.onMessage.removeListener(onMessage);
+						return tab.url;
+					}
+				};
+				browser.runtime.onMessage.addListener(onMessage);
+				await browser.windows.create({
+					url: "current-page-cookies-removed.html",
+				});
+			} catch (error) {
 				console.error(error);
-			});
-	}
-}
-
-async function getCookiesGroupedByDomain() {
-	const cookies = {};
-	for (const domain of await getAllDomains()) {
-		cookies[domain] = await getCookiesByDomain(domain);
-	}
-	return cookies;
-}
-
-function getCookiesByDomain(domain) {
-	return browser.cookies.getAll({ domain });
-}
-
-async function getAllDomains() {
-	const domains = new Set();
-	for (const url of await getAllUrls()) {
-		domains.add(url2domain(url));
-	}
-	return Array.from(domains);
-}
-
-async function getAllUrls() {
-	const tabs =  await browser.tabs.query({ currentWindow: true });
-	return tabs
-		.map((tab) => tab.url)
-		.filter((url) => url !== undefined);
+			}
+		}
+	});
+	return id;
 }

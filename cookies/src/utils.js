@@ -6,8 +6,28 @@ export function $$(selectors, target=document) {
 	return Array.from(target.querySelectorAll(selectors));
 }
 
-export function tag(tagName) {
-	return document.createElement(tagName);
+export function tag(tagName, { id, className, children }) {
+	const element = document.createElement(tagName);
+	if (id) {
+		element.id = id;
+	}
+	if (className) {
+		element.className = className;
+	}
+	if (children) {
+		element.appendChild(fragment([...toArray(children)]));
+	}
+	return element;
+}
+
+export function fragment(children) {
+	const documentFragment = document.createDocumentFragment();
+	for (const child of children) {
+		documentFragment.appendChild(
+			!isString(child) ? child : textNode(child),
+		);
+	}
+	return documentFragment;
 }
 
 export function textNode(data) {
@@ -48,4 +68,12 @@ export function isString(value) {
 
 export function url2domain(url) {
 	return (new URL(url)).hostname;
+}
+
+export function toArray(value) {
+	return Array.isArray(value) ? value : [value];
+}
+
+export function toObject(value) {
+	return typeof value === "object" ? value : { [value]: value };
 }
