@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Successor Tab Id",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Return to the previous activated tab when a tab is closed",
   "icons": {
     "48": "icons/icon.png"
