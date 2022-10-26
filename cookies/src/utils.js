@@ -6,7 +6,7 @@ export function $$(selectors, target=document) {
 	return Array.from(target.querySelectorAll(selectors));
 }
 
-export function tag(tagName, { id, className, children }) {
+export function tag(tagName, { id, className, children }={}) {
 	const element = document.createElement(tagName);
 	if (id) {
 		element.id = id;
@@ -32,6 +32,16 @@ export function fragment(children) {
 
 export function textNode(data) {
 	return document.createTextNode(data);
+}
+
+export function createOption(value, text, selected=false) {
+	const option = tag("option");
+	option.value = value;
+	option.appendChild(textNode(text ? text : value));
+	if (selected) {
+		option.setAttribute("selected", "selected");
+	}
+	return option;
 }
 
 export function letters() {

@@ -9,9 +9,19 @@ import {
 	createParentMenuItem,
 	onClickedListeners,
 } from "./menu-items.js";
+import { websitesTable } from "./tables.js";
+
+const cleanSites = {};
 
 (async () => {
 	await setMenuItems();
+	await setTabOnUpdatedListener();
+	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
+		browser.storage.onChanged.addListener(storageOnChanged);
+	}
+	if (!browser.tabs.onRemoved.hasListener(tabOnRemoved)) {
+		browser.tabs.onRemoved.addListener(tabOnRemoved);
+	}
 	return "Initialization finished";
 })()
 	.then(console.log)
@@ -25,6 +35,53 @@ async function setMenuItems() {
 	createViewCurrentPageCookiesMenuItem(parentId);
 	createRemoveAllCookiesMenuItem(parentId);
 	createRemoveCurrentPageCookiesMenuItem(parentId);
+}
+
+async function setTabOnUpdatedListener() {
+	try {
+		const urls =  await websitesTable.getKeys();
+		browser.tabs.onUpdated.removeListener(tabOnUpdated);
+		if (urls.length > 0) {
+			browser.tabs.onUpdated.addListener(
+				tabOnUpdated,
+				{
+					properties: ["url"],
+					urls,
+				}
+			);
+		}
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+function tabOnUpdated(tabId, changeInfo, tab) {
+	cleanSites[tabId.toString()] = tab.url;
+	console.log("cleanSites", cleanSites);
+}
+
+
+async function storageOnChanged(changes) {
+	try {
+		if (changes[websitesTable.name]) {
+			await setTabOnUpdatedListener();
+		}
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function tabOnRemoved(tabId) {
+	try {
+		const id = tabId.toString();
+		const url = cleanSites[id];
+		if (url) {
+			delete cleanSites[id];
+			await removeCookiesByUrl(url);
+		}
+	} catch (error) {
+		console.error(error);
+	}
 }
 
 function createViewAllCookiesMenuItem(parentId) {
