@@ -70,11 +70,7 @@ async function storageOnChanged(changes) {
 async function onActivated({ tabId, previousTabId }) {
 	try {
 		if (previousTabId) {
-			console.log("before", await browser.tabs.get(tabId));
 			await setSuccessor(tabId, previousTabId);
-			console.log("after", await browser.tabs.get(tabId));
-		} else {
-			console.log("without previousTabId");
 		}
 	} catch (error) {
 		console.error(error);
