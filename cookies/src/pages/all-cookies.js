@@ -1,5 +1,5 @@
-import { $, fragment, tag } from "./utils.js";
-import { cookiesGroupedByUrlItemTag } from "./cookies.js";
+import { $, fragment, tag } from "../utils.js";
+import { cookiesGroupedByUrlItemTag } from "../cookies.js";
 
 (async () => {
 	try {

@@ -57,7 +57,6 @@ async function setTabOnUpdatedListener() {
 
 function tabOnUpdated(tabId, changeInfo, tab) {
 	cleanSites[tabId.toString()] = tab.url;
-	console.log("cleanSites", cleanSites);
 }
 
 
@@ -98,7 +97,7 @@ function createViewAllCookiesMenuItem(parentId) {
 				};
 				browser.runtime.onMessage.addListener(onMessage);
 				await browser.windows.create({
-					url: "all-cookies.html",
+					url: "pages/all-cookies.html",
 				});
 			} catch (error) {
 				console.error(error);
@@ -126,7 +125,7 @@ function createViewCurrentPageCookiesMenuItem(parentId) {
 				};
 				browser.runtime.onMessage.addListener(onMessage);
 				await browser.windows.create({
-					url: "current-page-cookies.html",
+					url: "pages/current-page-cookies.html",
 				});
 			} catch (error) {
 				consol.error(error);
@@ -147,7 +146,7 @@ function createRemoveAllCookiesMenuItem(parentId) {
 			try {
 				await removeAllCookies();
 				await browser.windows.create({
-					url: "remove-all-cookies.html",
+					url: "pages/remove-all-cookies.html",
 				});
 			} catch (error) {
 				console.error(error);
@@ -175,7 +174,7 @@ function createRemoveCurrentPageCookiesMenuItem(parentId) {
 				};
 				browser.runtime.onMessage.addListener(onMessage);
 				await browser.windows.create({
-					url: "current-page-cookies-removed.html",
+					url: "pages/current-page-cookies-removed.html",
 				});
 			} catch (error) {
 				console.error(error);

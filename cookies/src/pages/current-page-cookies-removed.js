@@ -1,5 +1,5 @@
-import { $, tag } from "./utils.js";
-import { itemFragment } from "./cookies.js";
+import { $, tag } from "../utils.js";
+import { itemFragment } from "../cookies.js";
 
 (async () => {
 	try {
