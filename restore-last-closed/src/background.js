@@ -19,6 +19,8 @@ async function onMessageListener(message) {
 		const last = await getLastClosed();
 		if (last?.tab.sessionId) {
 			await browser.sessions.restore(last.tab.sessionId);
+		} else {
+			console.log("without last closed");
 		}
 	}
 }
