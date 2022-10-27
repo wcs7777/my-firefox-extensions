@@ -1,12 +1,12 @@
 export default [
 	{
-		input: "src/main.js",
+		input: "src/content.js",
 		output: {
-			file: "src/bundle/main.js",
+			file: "src/bundle/content.js",
 			format: "iife",
 		},
 	},
 ];
 
 // https://rollupjs.org/guide/en/#configuration-files
-// npx rollup --config rollup.config.js
+// npx rollup --config --bundleConfigAsCjs rollup.config.js

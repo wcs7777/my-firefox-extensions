@@ -16,9 +16,16 @@ import { utilsTable, optionsTable } from "./tables.js";
 
 async function onMessageListener(message) {
 	if (message?.restore === true) {
-		return utilsTable.get("lastClosed");
-	} else if (message?.lastClosed) {
-		await utilsTable.set("lastClosed", message.lastClosed);
-		return { saved: true };
+		const last = await getLastClosed();
+		if (last?.tab.sessionId) {
+			await browser.sessions.restore(last.tab.sessionId);
+		}
 	}
+}
+
+async function getLastClosed() {
+	const closed = await browser.sessions.getRecentlyClosed({
+		maxResults: 1,
+	});
+	return closed?.[0];
 }

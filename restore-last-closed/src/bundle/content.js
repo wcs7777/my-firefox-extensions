@@ -90,23 +90,13 @@
 						try {
 							if (e.ctrlKey && e.key.toUpperCase() === shortcut) {
 								e.preventDefault();
-								const lastClosed = await browser.runtime.sendMessage({
+								await browser.runtime.sendMessage({
 									restore: true,
 								});
-								if (lastClosed) {
-									window.open(lastClosed, "_self");
-								}
 							}
 						} catch (error) {
 							console.error(error);
 						}
-					});
-				} else {
-					window.addEventListener("beforeunload", () => {
-						browser.runtime.sendMessage({
-							lastClosed: window.location.href,
-						})
-							.catch(console.error);
 					});
 				}
 			}
