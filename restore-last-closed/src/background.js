@@ -20,8 +20,11 @@ async function onMessageListener(message) {
 		if (last?.tab.sessionId) {
 			await browser.sessions.restore(last.tab.sessionId);
 		} else {
-			console.log("without last closed");
+			return utilsTable.get("lastClosed");
 		}
+	} else if (message?.lastClosed) {
+		await utilsTable.set("lastClosed", message.lastClosed);
+		return { saved: true };
 	}
 }
 
