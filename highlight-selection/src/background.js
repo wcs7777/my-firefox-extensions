@@ -13,7 +13,7 @@ import onClickedListener from "./on-clicked-listener.js";
 	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
 		browser.storage.onChanged.addListener(storageOnChanged);
 	}
-	await setMenuItem();
+	await createMenuItem();
 	return "Initialization finished";
 })()
 	.then(console.log)
@@ -50,6 +50,7 @@ async function updateActivated() {
 				32: "../icons/icon-32.png",
 			},
 		});
+		await createMenuItem();
 	} else {
 		console.log("deactivated");
 		await browser.browserAction.setIcon({
@@ -62,7 +63,7 @@ async function updateActivated() {
 	}
 }
 
-async function setMenuItem() {
+async function createMenuItem() {
 	await removeMenuItem();
 	const menuItemId = browser.menus.create({
 		id: "show-highlights",
