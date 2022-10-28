@@ -58,12 +58,12 @@ async function updateActivated() {
 				32: "../icons/icon-dark-32.png",
 			},
 		});
+		await removeMenuItem();
 	}
 }
 
 async function setMenuItem() {
-	await browser.menus.removeAll();
-	onClickedListener.remove();
+	await removeMenuItem();
 	const menuItemId = browser.menus.create({
 		id: "show-highlights",
 		title: "Show Highlights",
@@ -92,4 +92,9 @@ async function setMenuItem() {
 			console.error(error);
 		}
 	});
+}
+
+async function removeMenuItem() {
+	await browser.menus.removeAll();
+	onClickedListener.remove();
 }
