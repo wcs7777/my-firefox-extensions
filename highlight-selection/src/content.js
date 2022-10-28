@@ -7,7 +7,6 @@ const attribute = "data-addon-highlight-selection";
 	try {
 		const {
 			shortcut,
-			shortcutHighlights,
 			color,
 			backgroundColor,
 			underline,
@@ -16,16 +15,14 @@ const attribute = "data-addon-highlight-selection";
 		if (activated) {
 			const style = makeStyle(color, backgroundColor, underline);
 			document.addEventListener("keydown", (e) => {
-				const key = e.key.toUpperCase();
-				if (key === shortcut) {
+				if (e.key.toUpperCase() === shortcut && hasSelection()) {
 					e.preventDefault();
 					highlighSelection(style);
-				} else if (key === shortcutHighlights) {
-					e.preventDefault();
-					console.clear();
-					console.log(highlights().join("\n"));
 				}
 			});
+			if (!browser.runtime.onMessage.hasListener(onMessage)) {
+				browser.runtime.onMessage.addListener(onMessage);
+			}
 		}
 	} catch (error) {
 		console.error(error);
@@ -46,19 +43,32 @@ function highlighSelection(style) {
 		const range = selection.getRangeAt(i);
 		const text = range.toString();
 		range.deleteContents();
-		range.insertNode(createHightlight(text, style));
+		range.insertNode(createHighlight(text, style));
 	}
 	selection.removeAllRanges();
+}
+
+function hasSelection() {
+	return window.getSelection().toString().trim().length > 0;
 }
 
 function highlights() {
 	return $$(`[${attribute}="true"]`).map((h) => h.textContent);
 }
 
-function createHightlight(text, style) {
+function createHighlight(text, style) {
 	const span = tag("span");
 	span.style.cssText = style;
 	span.setAttribute(attribute, true);
 	span.appendChild(textNode(text));
 	return span;
+}
+
+function onMessage({ getData }, sender, sendResponse) {
+	if (getData) {
+		sendResponse({
+			title: document.title,
+			highlights: highlights(),
+		});
+	}
 }

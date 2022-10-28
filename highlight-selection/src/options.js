@@ -23,20 +23,14 @@ element("setOptions").addEventListener("submit", async (e) => {
 	}
 });
 
-[
-	element("shortcut"),
-	element("shortcutHighlights"),
-]
-	.forEach((field) => {
-		field.addEventListener("keydown", (e) => {
-			if (!isNavigationKey(e)) {
-				e.preventDefault();
-				if (isAlphanumeric(e.key)) {
-					e.target.value = e.key.toUpperCase();
-				}
-			}
-		});
-	});
+element("shortcut").addEventListener("keydown", (e) => {
+	if (!isNavigationKey(e)) {
+		e.preventDefault();
+		if (isAlphanumeric(e.key)) {
+			e.target.value = e.key.toUpperCase();
+		}
+	}
+});
 
 function isNavigationKey(keydownEvent) {
 	return keydownEvent.ctrlKey || [
@@ -57,10 +51,8 @@ function isNavigationKey(keydownEvent) {
 
 async function setFieldValues() {
 	try {
-		const keys = await optionsTable.getKeys();
-		const values = await optionsTable.get(keys);
-		for (let i = 0; i < keys.length; ++i) {
-			setField(keys[i], values[i]);
+		for (const [key, value] of Object.entries(await optionsTable.getAll())) {
+			setField(key, value);
 		}
 	} catch (error) {
 		console.error(error);

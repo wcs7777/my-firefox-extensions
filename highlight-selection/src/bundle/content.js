@@ -5,8 +5,28 @@
 		return Array.from(target.querySelectorAll(selectors));
 	}
 
-	function tag(tagName) {
-		return document.createElement(tagName);
+	function tag(tagName, { id, className, children }={}) {
+		const element = document.createElement(tagName);
+		if (id) {
+			element.id = id;
+		}
+		if (className) {
+			element.className = className;
+		}
+		if (children) {
+			element.appendChild(fragment([...toArray(children)]));
+		}
+		return element;
+	}
+
+	function fragment(children) {
+		const documentFragment = document.createDocumentFragment();
+		for (const child of children) {
+			documentFragment.appendChild(
+				!isString(child) ? child : textNode(child),
+			);
+		}
+		return documentFragment;
 	}
 
 	function textNode(data) {
@@ -17,6 +37,14 @@
 	  return Object.prototype.toString.call(value) === "[object String]"
 	}
 
+	function toArray(value) {
+		return Array.isArray(value) ? value : [value];
+	}
+
+	function toObject(value) {
+		return typeof value === "object" ? value : { [value]: value };
+	}
+
 	class Table {
 		constructor(name="table", database) {
 			this.name = name;
@@ -25,15 +53,13 @@
 
 		async get(key) {
 			const table = await this.getAll();
-			if (!Array.isArray(key)) {
-				return table[key];
-			} else {
-				const values = [];
-				for (const k of key) {
-					values.push(table[k]);
-				}
-				return values;
-			}
+			return (
+				!Array.isArray(key) ?
+				table[key] :
+				key.reduce((obj, k) => {
+					return { ...obj, [k]: table[k] };
+				}, {})
+			);
 		}
 
 		async set(key, value) {
@@ -42,17 +68,9 @@
 				table[key] = value;
 			} else {
 				if (Array.isArray(table)) {
-					if (Array.isArray(key)) {
-						table = [...table, ...key];
-					} else {
-						table = [...table, key];
-					}
+					table = [...table, ...toArray(key)];
 				} else {
-					if (typeof key === "object") {
-						table = { ...table, ...key };
-					} else {
-						table = { ...table, [key]: key };
-					}
+					table = { ...table, ...toObject(key) };
 				}
 			}
 			return this.database.set(this.name, table);
@@ -107,7 +125,6 @@
 		try {
 			const {
 				shortcut,
-				shortcutHighlights,
 				color,
 				backgroundColor,
 				underline,
@@ -116,16 +133,14 @@
 			if (activated) {
 				const style = makeStyle(color, backgroundColor, underline);
 				document.addEventListener("keydown", (e) => {
-					const key = e.key.toUpperCase();
-					if (key === shortcut) {
+					if (e.key.toUpperCase() === shortcut && hasSelection()) {
 						e.preventDefault();
 						highlighSelection(style);
-					} else if (key === shortcutHighlights) {
-						e.preventDefault();
-						console.clear();
-						console.log(highlights().join("\n"));
 					}
 				});
+				if (!browser.runtime.onMessage.hasListener(onMessage)) {
+					browser.runtime.onMessage.addListener(onMessage);
+				}
 			}
 		} catch (error) {
 			console.error(error);
@@ -146,21 +161,34 @@
 			const range = selection.getRangeAt(i);
 			const text = range.toString();
 			range.deleteContents();
-			range.insertNode(createHightlight(text, style));
+			range.insertNode(createHighlight(text, style));
 		}
 		selection.removeAllRanges();
+	}
+
+	function hasSelection() {
+		return window.getSelection().toString().trim().length > 0;
 	}
 
 	function highlights() {
 		return $$(`[${attribute}="true"]`).map((h) => h.textContent);
 	}
 
-	function createHightlight(text, style) {
+	function createHighlight(text, style) {
 		const span = tag("span");
 		span.style.cssText = style;
 		span.setAttribute(attribute, true);
 		span.appendChild(textNode(text));
 		return span;
+	}
+
+	function onMessage({ getData }, sender, sendResponse) {
+		if (getData) {
+			sendResponse({
+				title: document.title,
+				highlights: highlights(),
+			});
+		}
 	}
 
 })();

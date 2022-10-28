@@ -1,5 +1,6 @@
 import populateOptions from "./populate-options.js";
 import { utilsTable, optionsTable } from "./tables.js";
+import onClickedListener from "./on-clicked-listener.js";
 
 (async () => {
 	if (!await utilsTable.get(optionsTable.name)) {
@@ -12,6 +13,7 @@ import { utilsTable, optionsTable } from "./tables.js";
 	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
 		browser.storage.onChanged.addListener(storageOnChanged);
 	}
+	await setMenuItem();
 	return "Initialization finished";
 })()
 	.then(console.log)
@@ -57,4 +59,37 @@ async function updateActivated() {
 			},
 		});
 	}
+}
+
+async function setMenuItem() {
+	await browser.menus.removeAll();
+	onClickedListener.remove();
+	const menuItemId = browser.menus.create({
+		id: "show-highlights",
+		title: "Show Highlights",
+		contexts: ["all"],
+	});
+	onClickedListener.add(async (info, tab) => {
+		try {
+			if (info.menuItemId === menuItemId) {
+				const data = await browser.tabs.sendMessage(
+					tab.id, { getData: true },
+				);
+				const { id: tabIdCreated } = await browser.tabs.create({
+					url: "highlights.html",
+					index: tab.index + 1,
+					active: true,
+				});
+				const onMessage = ({ getData }, sender, sendResponse) => {
+					if (getData && sender?.tab.id === tabIdCreated) {
+						browser.runtime.onMessage.removeListener(onMessage);
+						sendResponse(data);
+					}
+				};
+				browser.runtime.onMessage.addListener(onMessage);
+			}
+		} catch (error) {
+			console.error(error);
+		}
+	});
 }
