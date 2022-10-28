@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Highlight Selection",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Highlight selected text",
   "icons": {
     "48": "icons/icon.png"
@@ -22,6 +22,13 @@
   "background": {
     "page": "src/background.html",
     "persistent": true
+  },
+  "browser_action": {
+    "default_icon": {
+      "19": "icons/icon-19.png",
+      "38": "icons/icon-38.png"
+    },
+    "default_title": "Highlight Selection"
   },
   "permissions": [
     "storage"
