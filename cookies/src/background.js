@@ -89,16 +89,16 @@ function createViewAllCookiesMenuItem(parentId) {
 		if (info.menuItemId === id) {
 			try {
 				const cookiesGroupedByUrl = await getCookiesGroupedByUrl();
-				const onMessage = async (message) => {
-					if (message.getCookiesGroupedByUrl) {
+				const { tabs: [{ id }] } = await browser.windows.create({
+					url: "pages/all-cookies.html",
+				});
+				const onMessage = (message, sender, sendResponse) => {
+					if (message.getCookiesGroupedByUrl && sender?.tab.id === id) {
 						browser.runtime.onMessage.removeListener(onMessage);
-						return cookiesGroupedByUrl;
+						sendResponse(cookiesGroupedByUrl);
 					}
 				};
 				browser.runtime.onMessage.addListener(onMessage);
-				await browser.windows.create({
-					url: "pages/all-cookies.html",
-				});
 			} catch (error) {
 				console.error(error);
 			}
@@ -117,16 +117,16 @@ function createViewCurrentPageCookiesMenuItem(parentId) {
 		if (info.menuItemId === id) {
 			try {
 				const cookies = await getCookiesByUrl(tab.url);
-				const onMessage = async (message) => {
-					if (message.currentPageCookies) {
+				const { tabs: [{ id }] } = await browser.windows.create({
+					url: "pages/current-page-cookies.html",
+				});
+				const onMessage = (message, sender, sendResponse) => {
+					if (message.currentPageCookies && sender?.tab.id === id) {
 						browser.runtime.onMessage.removeListener(onMessage);
-						return { url: tab.url, cookies };
+						sendResponse({ url: tab.url, cookies });
 					}
 				};
 				browser.runtime.onMessage.addListener(onMessage);
-				await browser.windows.create({
-					url: "pages/current-page-cookies.html",
-				});
 			} catch (error) {
 				consol.error(error);
 			}
@@ -166,16 +166,16 @@ function createRemoveCurrentPageCookiesMenuItem(parentId) {
 		if (info.menuItemId === id) {
 			try {
 				await removeCookiesByUrl(tab.url);
-				const onMessage = async (message) => {
-					if (message.currentPageCookiesRemoved) {
+				const { tabs: [{ id }] } = await browser.windows.create({
+					url: "pages/current-page-cookies-removed.html",
+				});
+				const onMessage = (message, sender, sendResponse) => {
+					if (message.currentPageCookiesRemoved && sender?.tab.id === id) {
 						browser.runtime.onMessage.removeListener(onMessage);
-						return tab.url;
+						sendResponse(tab.url);
 					}
 				};
 				browser.runtime.onMessage.addListener(onMessage);
-				await browser.windows.create({
-					url: "pages/current-page-cookies-removed.html",
-				});
 			} catch (error) {
 				console.error(error);
 			}
