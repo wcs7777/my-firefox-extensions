@@ -9,22 +9,44 @@ import { utilsTable, optionsTable } from "./tables.js";
 		await populateOptions(optionsTable);
 		await utilsTable.set(optionsTable.name, true);
 	}
+	if (!browser.browserAction.onClicked.hasListener(actionOnClicked)) {
+		browser.browserAction.onClicked.addListener(actionOnClicked);
+	}
 	return "Initialization finished";
 })()
 	.then(console.log)
 	.catch(console.error);
 
-async function onMessageListener(message) {
-	if (message?.restore === true) {
-		const last = await getLastClosed();
-		if (last?.tab.sessionId) {
-			await browser.sessions.restore(last.tab.sessionId);
-		} else {
-			return utilsTable.get("lastClosed");
+async function onMessageListener(message, sender) {
+	try {
+		if (message?.restore === true) {
+			await restoreLastClosed(sender.tab.id);
+		} else if (message?.lastClosed) {
+			await utilsTable.set("lastClosed", message.lastClosed);
+			return { saved: true };
 		}
-	} else if (message?.lastClosed) {
-		await utilsTable.set("lastClosed", message.lastClosed);
-		return { saved: true };
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function actionOnClicked(tab) {
+	try {
+		await restoreLastClosed(tab.id);
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function restoreLastClosed(tabId) {
+	const last = await getLastClosed();
+	if (last?.tab.sessionId) {
+		await browser.sessions.restore(last.tab.sessionId);
+	} else {
+		await browser.tabs.sendMessage(
+			tabId,
+			{ openUrl: await utilsTable.get("lastClosed") },
+		);
 	}
 }
 
