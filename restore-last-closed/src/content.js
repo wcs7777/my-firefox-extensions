@@ -19,7 +19,7 @@ import { optionsTable } from "./tables.js";
 				});
 				await browser.runtime.onMessage.addListener(({ openUrl }) => {
 					if (openUrl) {
-						window.open(lastClosed, "_self");
+						window.open(openUrl, "_self");
 					}
 				});
 			} else {
