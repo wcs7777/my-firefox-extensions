@@ -12,14 +12,14 @@ import { optionsTable } from "./tables.js";
 							await browser.runtime.sendMessage({
 								restore: true,
 							});
-							await browser.runtime.onMessage(({ openUrl }) => {
-								if (openUrl) {
-									window.open(lastClosed, "_self");
-								}
-							});
 						}
 					} catch (error) {
 						console.error(error);
+					}
+				});
+				await browser.runtime.onMessage(({ openUrl }) => {
+					if (openUrl) {
+						window.open(lastClosed, "_self");
 					}
 				});
 			} else {
