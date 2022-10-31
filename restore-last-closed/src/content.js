@@ -17,7 +17,7 @@ import { optionsTable } from "./tables.js";
 						console.error(error);
 					}
 				});
-				await browser.runtime.onMessage(({ openUrl }) => {
+				await browser.runtime.onMessage.addListener(({ openUrl }) => {
 					if (openUrl) {
 						window.open(lastClosed, "_self");
 					}
