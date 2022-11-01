@@ -70,20 +70,24 @@ async function storageOnChanged(changes) {
 async function onActivated({ tabId, previousTabId }) {
 	try {
 		if (previousTabId) {
-			await setSuccessor(tabId, previousTabId);
+			await setSuccessor(
+				tabId,
+				previousTabId,
+				await optionsTable.get("insert"),
+			);
 		}
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-function setSuccessor(tabId, successorId) {
+function setSuccessor(tabId, successorId, insert=true) {
 	return browser.tabs.moveInSuccession(
 		[tabId],
 		successorId,
 		{
 			append: false,
-			insert: true,
+			insert,
 		},
 	);
 }

@@ -8,7 +8,7 @@ element("setOptions").addEventListener("submit", async (e) => {
 		e.preventDefault();
 		await optionsTable.set({
 			activated: element("activated").value === "true",
-			toLeft: element("toLeft").value === "true",
+			insert: element("insert").value === "true",
 		});
 		await setFieldValues();
 	} catch (error) {
