@@ -1,5 +1,6 @@
-import { optionsTable } from "./tables.js";
-import { byId, isNumber } from "./utils.js";
+import { optionsTable, controlsTable } from "./tables.js";
+import { byId, file2object, isNumber } from "./utils.js";
+import downloadObject from "./download-object.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
 	try {
@@ -20,6 +21,32 @@ byId("setOptions").addEventListener("submit", async (e) => {
 		const options = await optionsTable.getAll();
 		setFieldsValues(options);
 		console.log(options);
+	} catch (error) {
+		console.error(error);
+	}
+});
+
+byId("downloadControlsTable").addEventListener("click", async (e) => {
+	try {
+		e.preventDefault();
+		downloadObject(
+			await controlsTable.getAll(),
+			"media-controls-controls-table.json",
+		)
+			.then(console.log)
+			.catch(console.error);
+	} catch (error) {
+		console.error(error);
+	}
+});
+
+byId("updateControlsTable").addEventListener("submit", async (e) => {
+	try {
+		e.preventDefault();
+		const file = extractFile("controlsTable");
+		if (file) {
+			await controlsTable.set(await file2object(file));
+		}
 	} catch (error) {
 		console.error(error);
 	}
@@ -63,6 +90,13 @@ function extractFieldValue(idField) {
 	const value = field.value.trim();
 	field.value = "";
 	return value;
+}
+
+function extractFile(id) {
+	const field = byId(id);
+	const file = field.files?.[0];
+	field.value = "";
+	return file;
 }
 
 function normalizeOptions(options) {

@@ -107,7 +107,13 @@
 
 		async get(key) {
 			const table = await this.getAll();
-			return !Array.isArray(key) ? table[key] : key.map((k) => table[k]);
+			return (
+				!Array.isArray(key) ?
+				table[key] :
+				key.reduce((obj, k) => {
+					return { ...obj, [k]: table[k] };
+				}, {})
+			);
 		}
 
 		async set(key, value) {
@@ -132,9 +138,11 @@
 			return Object.keys(await this.getAll());
 		}
 
-		async remove(key) {
+		async remove(keys) {
 			const table = await this.getAll();
-			delete table[key];
+			for (const key of toArray(keys)) {
+				delete table[key];
+			}
 			return this.database.set(this.name, table);
 		}
 
