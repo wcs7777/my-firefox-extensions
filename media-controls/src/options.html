@@ -7,15 +7,19 @@
 <body>
 	<form id="setOptions">
 		<label for="shortcut">Shortcut (Ctrl+?)</label>
-		<input type="text" id="shortcut">
+		<input type="text" id="shortcut" required>
 		<label for="timeRate">Time Rate</label>
-		<input type="text" id="timeRate">
+		<input type="text" id="timeRate" pattern="\d*\.?\d+" required>
 		<label for="timeCtrlRate">Time Ctrl Rate</label>
-		<input type="text" id="timeCtrlRate">
+		<input type="text" id="timeCtrlRate" pattern="\d*\.?\d+" required>
 		<label for="speedRate">Speed Rate</label>
-		<input type="text" id="speedRate">
+		<input type="text" id="speedRate" pattern="\d*\.?\d+" required>
 		<label for="speedCtrlRate">Speed Ctrl Rate</label>
-		<input type="text" id="speedCtrlRate">
+		<input type="text" id="speedCtrlRate"pattern="\d*\.?\d+"  required>
+		<label for="waitTimeout">Wait Timeout</label>
+		<input type="text" id="waitTimeout" pattern="\d+" required>
+		<label for="waitInterval">Wait Interval</label>
+		<input type="text" id="waitInterval" pattern="\d+" required>
 		<label for="activated">Activated?</label>
 		<select id="activated">
 			<option value="true" selected>True</option>

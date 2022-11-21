@@ -5,7 +5,7 @@ import {
 	min,
 	onLocationChange,
 	tag,
-	waitForElement,
+	waitElement,
 } from "./utils.js";
 
 (async () => {
@@ -23,121 +23,123 @@ import {
 	.catch(console.error);
 
 async function main() {
-	await waitForElement(["video", "audio"], 250, 8000);
+	await waitElement({
+		selectors: ["video", "audio"],
+		interval: await optionsTable.get("waitInterval"),
+		timeout: await optionsTable.get("waitTimeout"),
+	});
 	const medias = [...$$("video"), ...$$("audio")];
-	if (medias.length > 0) {
-		const {
-			shortcut,
-			timeRate,
-			timeCtrlRate,
-			speedRate,
-			speedCtrlRate,
-		} = await optionsTable.getAll();
-		const controls = await controlsTable.getAll();
-		const keysWithCtrl = [
-			...controls.backward,
-			...controls.forward,
-			...controls.increaseSpeed,
-			...controls.decreaseSpeed,
-		];
-		const keys = [
-			...keysWithCtrl,
-			...controls.begin,
-			...controls.end,
-			...controls.middle,
-			...controls.togglePlay,
-			...controls.resetSpeed,
-			...controls.increaseVolume,
-			...controls.decreaseVolume,
-			...controls.toggleMute,
-		];
-		let activated = false;
-		let currentMedia = medias[0];
-		for (const media of medias) {
-			media.addEventListener("play", () => currentMedia = media);
-		}
-		document.addEventListener("keydown", (e) => {
-			if (e.ctrlKey && e.key.toUpperCase() === shortcut) {
-				e.preventDefault();
-				if (activated) {
-					document.removeEventListener("keydown", keydownListener);
-				} else {
-					document.addEventListener("keydown", keydownListener);
-				}
-				activated = !activated;
-				const message = (
-					`media player control ${activated ? "" : "de"}activated`
-				);
-				console.log(message);
-				showPopup(createPopup(), message, 1200);
-			} else if (e.ctrlKey && e.key.toUpperCase() === "L") {
-				e.preventDefault();
-				console.log("media controls");
-				const message = JSON.stringify(controls, null, 4);
-				console.log(message);
-				showPopup(createPopup(), message, 5000);
+	const {
+		shortcut,
+		timeRate,
+		timeCtrlRate,
+		speedRate,
+		speedCtrlRate,
+	} = await optionsTable.getAll();
+	const controls = await controlsTable.getAll();
+	const keysWithCtrl = [
+		...controls.backward,
+		...controls.forward,
+		...controls.increaseSpeed,
+		...controls.decreaseSpeed,
+	];
+	const keys = [
+		...keysWithCtrl,
+		...controls.begin,
+		...controls.end,
+		...controls.middle,
+		...controls.togglePlay,
+		...controls.resetSpeed,
+		...controls.increaseVolume,
+		...controls.decreaseVolume,
+		...controls.toggleMute,
+	];
+	let activated = false;
+	let currentMedia = medias[0];
+	for (const media of medias) {
+		media.addEventListener("play", () => currentMedia = media);
+	}
+	document.addEventListener("keydown", (e) => {
+		if (e.ctrlKey && e.key.toUpperCase() === shortcut) {
+			e.preventDefault();
+			if (activated) {
+				document.removeEventListener("keydown", keydownListener);
+			} else {
+				document.addEventListener("keydown", keydownListener);
 			}
-		});
-
-		function isControlMediaKey(e) {
-			return keys.includes(e.key);
-		}
-
-		function validCtrlKey(e) {
-			return !e.ctrlKey || keysWithCtrl.includes(e.key);
-		}
-
-		function validKeyOnYoutube(e) {
-			return (
-				window.location.host !== "www.youtube.com" ||
-				![
-					"ArrowUp",
-					"ArrowRight",
-					"ArrowDown",
-					"ArrowLeft",
-					"k",
-					"K",
-					"m",
-					"M",
-				].includes(e.key)
+			activated = !activated;
+			const message = (
+				`media player control ${activated ? "" : "de"}activated`
 			);
+			console.log(message);
+			showPopup(createPopup(), message, 1200);
+		} else if (e.ctrlKey && e.key.toUpperCase() === "L") {
+			e.preventDefault();
+			console.log("media controls");
+			const message = JSON.stringify(controls, null, 4);
+			console.log(message);
+			showPopup(createPopup(), message, 5000);
 		}
+	});
 
-		function validKey(e) {
-			return isControlMediaKey(e) && validCtrlKey(e) && validKeyOnYoutube(e);
-		}
+	function isControlMediaKey(e) {
+		return keys.includes(e.key);
+	}
 
-		async function keydownListener(e) {
-			try {
-				if (validKey(e)) {
-					e.preventDefault();
-					const action = Object
-						.keys(controls)
-						.find((action) => controls[action].includes(e.key));
-					await doAction({
-						media: currentMedia,
-						action: action,
-						key: e.key,
-						timeRate: parseFloat(!e.ctrlKey ? timeRate : timeCtrlRate),
-						speedRate: parseFloat(!e.ctrlKey ? speedRate : speedCtrlRate),
-						minSpeed: 0.2,
-						maxSpeed: 5.0,
-						volumeRate: 0.05,
-					});
-					if (action.includes("Speed")) {
-						showPopup(
-							createPopup(),
-							currentMedia.playbackRate.toFixed(2),
-							200,
-						);
-					}
-					if (action !== "togglePlay") {
-						await currentMedia.play();
-					}
+	function validCtrlKey(e) {
+		return !e.ctrlKey || keysWithCtrl.includes(e.key);
+	}
+
+	function validKeyOnYoutube(e) {
+		return (
+			window.location.host !== "www.youtube.com" ||
+			![
+				"ArrowUp",
+				"ArrowRight",
+				"ArrowDown",
+				"ArrowLeft",
+				"k",
+				"K",
+				"m",
+				"M",
+			].includes(e.key)
+		);
+	}
+
+	function validKey(e) {
+		return isControlMediaKey(e) && validCtrlKey(e) && validKeyOnYoutube(e);
+	}
+
+	async function keydownListener(e) {
+		try {
+			if (validKey(e)) {
+				e.preventDefault();
+				const action = Object
+					.keys(controls)
+					.find((action) => controls[action].includes(e.key));
+				await doAction({
+					media: currentMedia,
+					action: action,
+					key: e.key,
+					timeRate: parseFloat(!e.ctrlKey ? timeRate : timeCtrlRate),
+					speedRate: parseFloat(!e.ctrlKey ? speedRate : speedCtrlRate),
+					minSpeed: 0.2,
+					maxSpeed: 5.0,
+					volumeRate: 0.05,
+				});
+				if (action.includes("Speed")) {
+					showPopup(
+						createPopup(),
+						currentMedia.playbackRate.toFixed(2),
+						200,
+					);
 				}
-			} catch (error) {
-				console.error(error);
+				if (action !== "togglePlay") {
+					await currentMedia.play();
+				}
 			}
+		} catch (error) {
+			console.error(error);
 		}
 	}
 }

@@ -1,53 +1,106 @@
 import { optionsTable } from "./tables.js";
-import { $, isAlphanumeric } from "./utils.js";
+import { byId, isNumber } from "./utils.js";
 
-document.addEventListener("DOMContentLoaded", setFieldValues);
-
-element("setOptions").addEventListener("submit", async (e) => {
+document.addEventListener("DOMContentLoaded", async () => {
 	try {
-		e.preventDefault();
-		const keys = await optionsTable.getKeys();
-		const values = getFieldsAndClean(keys);
-		if (values.every((value) => value.length > 0)) {
-			const options = keys.reduce((obj, key, i) => {
-				return { ...obj, [key]: values[i] };
-			}, {});
-			await optionsTable.set({
-				...options,
-				shortcut: options.shortcut.toUpperCase(),
-				activated: options.activated === "true",
-			});
-		}
-		await setFieldValues();
+		setFieldsValues(await optionsTable.getAll());
 	} catch (error) {
 		console.error(error);
 	}
 });
 
-element("shortcut").addEventListener("keydown", (e) => {
-	if (!isNavigationKey(e)) {
+byId("setOptions").addEventListener("submit", async (e) => {
+	try {
 		e.preventDefault();
-		if (isAlphanumeric(e.key)) {
-			e.target.value = e.key.toUpperCase();
-		}
+		await optionsTable.set(
+			normalizeOptions(
+				extractFieldsValues(await optionsTable.getKeys())
+			),
+		);
+		const options = await optionsTable.getAll();
+		setFieldsValues(options);
+		console.log(options);
+	} catch (error) {
+		console.error(error);
 	}
 });
 
+onlyShortcut(byId("shortcut"));
+
 [
-	element("timeRate"),
-	element("timeCtrlRate"),
-	element("speedRate"),
-	element("speedCtrlRate"),
+	byId("timeRate"),
+	byId("timeCtrlRate"),
+	byId("speedRate"),
+	byId("speedCtrlRate"),
 ]
-	.forEach((field) => field.addEventListener("keydown", (e) => {
+	.forEach(onlyFloat);
+
+[
+	byId("waitTimeout"),
+	byId("waitInterval"),
+]
+	.forEach(onlyInt);
+
+function setFieldsValues(ids2values) {
+	for (const [id, value] of Object.entries(ids2values)) {
+		setField(id, value);
+	}
+}
+
+function setField(id, value) {
+	return byId(id).value = value;
+}
+
+function extractFieldsValues(idFields) {
+	return idFields.reduce((values, id) => {
+		values[id] = extractFieldValue(id);
+		return values;
+	}, {});
+}
+
+function extractFieldValue(idField) {
+	const field = byId(idField);
+	const value = field.value.trim();
+	field.value = "";
+	return value;
+}
+
+function normalizeOptions(options) {
+	return {
+		...options,
+		activated: options.activated === "true",
+	};
+}
+
+function onlyShortcut(target) {
+	target.addEventListener("keydown", (e) => {
+		if (e.key.length === 1) {
+			e.preventDefault();
+			e.target.value = e.key.toUpperCase();
+		}
+	});
+}
+
+function onlyFloat(target) {
+	target.addEventListener("keydown", (e) => {
 		if (
 			!isNumber(e.key) &&
+			(e.key !== "." || field.value.includes(".")) &&
 			!isNavigationKey(e) &&
-			(e.key !== "." || field.value.includes("."))
+			true
 		) {
 			e.preventDefault();
 		}
-	}));
+	});
+}
+
+function onlyInt(target) {
+	target.addEventListener("keydown", (e) => {
+		if (!isNumber(e.key) && !isNavigationKey(e)) {
+			e.preventDefault();
+		}
+	});
+}
 
 function isNavigationKey(keydownEvent) {
 	return keydownEvent.ctrlKey || [
@@ -64,31 +117,4 @@ function isNavigationKey(keydownEvent) {
 		"Enter",
 	]
 		.includes(keydownEvent.key);
-}
-
-async function setFieldValues() {
-	try {
-		for (const [key, value] of Object.entries(await optionsTable.getAll())) {
-			setField(key, value);
-		}
-	} catch (error) {
-		console.error(error);
-	}
-}
-
-function setField(id, value) {
-	return element(id).value = value;
-}
-
-function element(id) {
-	return $(`#${id}`);
-}
-
-function getFieldsAndClean(idFields) {
-	return idFields.map((id) => {
-		const field = element(id);
-		const value = field.value.trim();
-		field.value = "";
-		return value;
-	});
 }

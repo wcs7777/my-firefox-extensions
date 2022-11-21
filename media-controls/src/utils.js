@@ -6,6 +6,10 @@ export function $$(selectors, target=document) {
 	return Array.from(target.querySelectorAll(selectors));
 }
 
+export function byId(elementId) {
+	return document.getElementById(elementId);
+}
+
 export function tag(tagName) {
 	return document.createElement(tagName);
 }
@@ -14,21 +18,52 @@ export function textNode(data) {
 	return document.createTextNode(data);
 }
 
-export function waitForElement(selectors, interval, timeout) {
-	const slc = !Array.isArray(selectors) ? [selectors] : selectors;
+export function waitElement({
+	selectors,
+	target=document,
+	timeout=0,
+	interval=500,
+}={}) {
 	return new Promise((resolve, reject) => {
-		const intervalID = setInterval(() => {
-			const element = slc.find((s) => $(s));
-			if (element) {
-				clearInterval(intervalID);
+		const selectorsArray = toArray(selectors);
+		const elem = find();
+		if (elem !== undefined) {
+			return resolve(elem);
+		}
+		const idInterval = setInterval(() => {
+			const element = find();
+			if (element !== undefined) {
+				clearTimers();
 				resolve(element);
 			}
 		}, interval);
-		setTimeout(() => {
-			clearInterval(intervalID);
-			reject();
-		}, timeout);
+		const idTimeout = (
+			timeout > 0 ?
+			setTimeout(() => {
+				clearTimers();
+				reject(
+					new Error(`${timeout} expired without found ${selectors}`),
+				);
+			}, timeout) :
+			false
+		);
+
+		function find() {
+			return selectorsArray.find((s) => hasChild(s, target));
+		}
+
+		function clearTimers() {
+			clearInterval(idInterval);
+			if (idTimeout !== false) {
+				clearTimeout(idTimeout);
+			}
+		}
+
 	});
+}
+
+export function hasChild(selectors, target=document) {
+	return $(selectors, target) !== null;
 }
 
 export function onLocationChange(listener) {
