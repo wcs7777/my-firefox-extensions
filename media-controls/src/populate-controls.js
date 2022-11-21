@@ -9,8 +9,8 @@ export default function populateControls(table) {
 		increaseSpeed: ["["],
 		decreaseSpeed: ["]"],
 		resetSpeed: ["Dead"],
-		increaseVolume: ["ArrowUp"],
-		decreaseVolume: ["ArrowDown"],
+		increaseVolume: ["="],
+		decreaseVolume: ["-"],
 		toggleMute: ["m", "M"],
 	});
 }
