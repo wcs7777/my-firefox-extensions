@@ -91,14 +91,6 @@
 		return typeof value === "object" ? value : { [value]: value };
 	}
 
-	function min(a, b) {
-		return a < b ? a : b;
-	}
-
-	function max(a, b) {
-		return a > b ? a : b;
-	}
-
 	class Table {
 		constructor(name="table", database) {
 			this.name = name;
@@ -342,13 +334,13 @@
 				return media.paused ? media.play() : media.pause();
 			},
 			"increaseSpeed": () => {
-				return media.playbackRate = min(
+				return media.playbackRate = Math.min(
 					media.playbackRate + speedRate,
 					maxSpeed,
 				);
 			},
 			"decreaseSpeed": () => {
-				return media.playbackRate = max(
+				return media.playbackRate = Math.max(
 					media.playbackRate - speedRate,
 					minSpeed,
 				);
@@ -357,10 +349,10 @@
 				return media.playbackRate = 1;
 			},
 			"increaseVolume": () => {
-				return media.volume = min(media.volume + volumeRate, 1.00);
+				return media.volume = Math.min(media.volume + volumeRate, 1.00);
 			},
 			"decreaseVolume": () => {
-				return media.volume = max(media.volume - volumeRate, 0.00);
+				return media.volume = Math.max(media.volume - volumeRate, 0.00);
 			},
 			"toggleMute": () => {
 				return media.muted = !media.muted;

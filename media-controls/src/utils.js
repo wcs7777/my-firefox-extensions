@@ -154,11 +154,3 @@ export function toArray(value) {
 export function toObject(value) {
 	return typeof value === "object" ? value : { [value]: value };
 }
-
-export function min(a, b) {
-	return a < b ? a : b;
-}
-
-export function max(a, b) {
-	return a > b ? a : b;
-}

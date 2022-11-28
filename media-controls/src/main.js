@@ -1,8 +1,6 @@
 import { controlsTable, optionsTable } from "./tables.js";
 import {
 	$$,
-	max,
-	min,
 	onLocationChange,
 	tag,
 	waitElement,
@@ -174,13 +172,13 @@ async function doAction({
 			return media.paused ? media.play() : media.pause();
 		},
 		"increaseSpeed": () => {
-			return media.playbackRate = min(
+			return media.playbackRate = Math.min(
 				media.playbackRate + speedRate,
 				maxSpeed,
 			);
 		},
 		"decreaseSpeed": () => {
-			return media.playbackRate = max(
+			return media.playbackRate = Math.max(
 				media.playbackRate - speedRate,
 				minSpeed,
 			);
@@ -189,10 +187,10 @@ async function doAction({
 			return media.playbackRate = 1;
 		},
 		"increaseVolume": () => {
-			return media.volume = min(media.volume + volumeRate, 1.00);
+			return media.volume = Math.min(media.volume + volumeRate, 1.00);
 		},
 		"decreaseVolume": () => {
-			return media.volume = max(media.volume - volumeRate, 0.00);
+			return media.volume = Math.max(media.volume - volumeRate, 0.00);
 		},
 		"toggleMute": () => {
 			return media.muted = !media.muted;
