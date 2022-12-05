@@ -242,7 +242,9 @@
 					listener: () => {
 						if (currentMedia === media) {
 							currentMedia = null;
-							setActivated(false);
+							if (activated) {
+								setActivated(false);
+							}
 						}
 					},
 				});
