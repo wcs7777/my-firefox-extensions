@@ -1,10 +1,6 @@
 (function () {
 	'use strict';
 
-	function $(selectors, target=document) {
-		return target.querySelector(selectors);
-	}
-
 	function $$(selectors, target=document) {
 		return Array.from(target.querySelectorAll(selectors));
 	}
@@ -13,52 +9,57 @@
 		return document.createElement(tagName);
 	}
 
-	function waitElement({
+	function onAppend({
 		selectors,
-		target=document,
-		timeout=0,
-		interval=500,
+		target=document.body,
+		options={ childList: true },
+		listener,
+		errorLogger=console.error,
 	}={}) {
-		return new Promise((resolve, reject) => {
-			const selectorsArray = toArray(selectors);
-			const elem = find();
-			if (elem !== undefined) {
-				return resolve(elem);
-			}
-			const idInterval = setInterval(() => {
-				const element = find();
-				if (element !== undefined) {
-					clearTimers();
-					resolve(element);
+		const mutation = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				const addedNodes = Array.from(mutation.addedNodes);
+				let nodes = [];
+				if (addedNodes.length > 0) {
+					if (selectors) {
+						nodes = $$(selectors, target).filter((element) => {
+							return addedNodes.some((added) => {
+								return added.contains(element);
+							});
+						});
+					} else {
+						nodes = addedNodes;
+					}
 				}
-			}, interval);
-			const idTimeout = (
-				timeout > 0 ?
-				setTimeout(() => {
-					clearTimers();
-					reject(
-						new Error(`${timeout} expired without found ${selectors}`),
-					);
-				}, timeout) :
-				false
-			);
-
-			function find() {
-				return selectorsArray.find((s) => hasChild(s, target));
-			}
-
-			function clearTimers() {
-				clearInterval(idInterval);
-				if (idTimeout !== false) {
-					clearTimeout(idTimeout);
+				if (nodes.length > 0) {
+					listener(nodes, mutation.target)?.catch(errorLogger);
+					break;
 				}
 			}
-
 		});
+		mutation.observe(target, options);
+		return mutation;
 	}
 
-	function hasChild(selectors, target=document) {
-		return $(selectors, target) !== null;
+	function onRemoved({
+		element,
+		target=document.body,
+		options={ childList: true },
+		listener,
+		errorLogger=console.error,
+	}={}) {
+		const observer = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				const removedNodes = Array.from(mutation.removedNodes);
+				if (removedNodes.some((removed) => removed.contains(element))) {
+					listener(element)?.catch(errorLogger);
+					observer.disconnect();
+					break;
+				}
+			}
+		});
+		observer.observe(target, options);
+		return observer;
 	}
 
 	function onLocationChange(listener) {
@@ -183,12 +184,6 @@
 		.catch(console.error);
 
 	async function main() {
-		await waitElement({
-			selectors: ["video", "audio"],
-			interval: await optionsTable.get("waitInterval"),
-			timeout: await optionsTable.get("waitTimeout"),
-		});
-		const medias = [...$$("video"), ...$$("audio")];
 		const {
 			shortcut,
 			timeRate,
@@ -214,25 +209,18 @@
 			...controls.decreaseVolume,
 			...controls.toggleMute,
 		];
+		let currentMedia = null;
 		let activated = false;
-		let currentMedia = medias[0];
-		for (const media of medias) {
-			media.addEventListener("play", () => currentMedia = media);
-		}
+		listenMedias($$("video, audio"));
+		onAppend({
+			selectors: "video, audio",
+			options: { childList: true, subtree: true },
+			listener: listenMedias,
+		});
 		document.addEventListener("keydown", (e) => {
-			if (e.ctrlKey && e.key.toUpperCase() === shortcut) {
+			if (currentMedia && e.ctrlKey && e.key.toUpperCase() === shortcut) {
 				e.preventDefault();
-				if (activated) {
-					document.removeEventListener("keydown", keydownListener);
-				} else {
-					document.addEventListener("keydown", keydownListener);
-				}
-				activated = !activated;
-				const message = (
-					`media player control ${activated ? "" : "de"}activated`
-				);
-				console.log(message);
-				showPopup(createPopup(), message, 1200);
+				setActivated(!activated);
 			} else if (e.ctrlKey && e.key.toUpperCase() === "L") {
 				e.preventDefault();
 				console.log("media controls");
@@ -241,6 +229,39 @@
 				showPopup(createPopup(), message, 5000);
 			}
 		});
+
+		function listenMedias(medias) {
+			if (currentMedia == null) {
+				currentMedia = medias?.[0];
+			}
+			for (const media of medias) {
+				media.addEventListener("play", () => currentMedia = media);
+				onRemoved({
+					element: media,
+					options: { childList: true, subtree: true },
+					listener: () => {
+						if (currentMedia === media) {
+							currentMedia = null;
+							setActivated(false);
+						}
+					},
+				});
+			}
+		}
+
+		function setActivated(value) {
+			activated = value;
+			if (!activated) {
+				document.removeEventListener("keydown", keydownListener);
+			} else {
+				document.addEventListener("keydown", keydownListener);
+			}
+			const message = (
+				`media player control ${activated ? "" : "de"}activated`
+			);
+			console.log(message);
+			showPopup(createPopup(), message, 1200);
+		}
 
 		function isControlMediaKey(e) {
 			return keys.includes(e.key);

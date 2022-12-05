@@ -55,19 +55,14 @@ export function file2object(file) {
 
 export function waitElement({
 	selectors,
-	target=document,
+	target=document.body,
 	timeout=0,
 	interval=500,
 }={}) {
 	return new Promise((resolve, reject) => {
-		const selectorsArray = toArray(selectors);
-		const elem = find();
-		if (elem !== undefined) {
-			return resolve(elem);
-		}
 		const idInterval = setInterval(() => {
-			const element = find();
-			if (element !== undefined) {
+			const element = $(selectors, target);
+			if (element != undefined) {
 				clearTimers();
 				resolve(element);
 			}
@@ -83,10 +78,6 @@ export function waitElement({
 			false
 		);
 
-		function find() {
-			return selectorsArray.find((s) => hasChild(s, target));
-		}
-
 		function clearTimers() {
 			clearInterval(idInterval);
 			if (idTimeout !== false) {
@@ -97,8 +88,57 @@ export function waitElement({
 	});
 }
 
-export function hasChild(selectors, target=document) {
-	return $(selectors, target) !== null;
+export function onAppend({
+	selectors,
+	target=document.body,
+	options={ childList: true },
+	listener,
+	errorLogger=console.error,
+}={}) {
+	const mutation = new MutationObserver((mutations) => {
+		for (const mutation of mutations) {
+			const addedNodes = Array.from(mutation.addedNodes);
+			let nodes = [];
+			if (addedNodes.length > 0) {
+				if (selectors) {
+					nodes = $$(selectors, target).filter((element) => {
+						return addedNodes.some((added) => {
+							return added.contains(element);
+						});
+					});
+				} else {
+					nodes = addedNodes;
+				}
+			}
+			if (nodes.length > 0) {
+				listener(nodes, mutation.target)?.catch(errorLogger);
+				break;
+			}
+		}
+	});
+	mutation.observe(target, options);
+	return mutation;
+}
+
+export function onRemoved({
+	element,
+	target=document.body,
+	options={ childList: true },
+	listener,
+	errorLogger=console.error,
+}={}) {
+	const observer = new MutationObserver((mutations) => {
+		for (const mutation of mutations) {
+			const removedNodes = Array.from(mutation.removedNodes);
+			if (removedNodes.some((removed) => removed.contains(element))) {
+				listener(element)?.catch(errorLogger);
+				observer.disconnect();
+				break;
+			}
+		}
+	});
+	observer.observe(target, options);
+	return observer;
 }
 
 export function onLocationChange(listener) {

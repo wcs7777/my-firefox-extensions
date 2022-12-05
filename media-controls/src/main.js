@@ -1,9 +1,10 @@
 import { controlsTable, optionsTable } from "./tables.js";
 import {
 	$$,
+	onAppend,
 	onLocationChange,
+	onRemoved,
 	tag,
-	waitElement,
 } from "./utils.js";
 
 (async () => {
@@ -21,12 +22,6 @@ import {
 	.catch(console.error);
 
 async function main() {
-	await waitElement({
-		selectors: ["video", "audio"],
-		interval: await optionsTable.get("waitInterval"),
-		timeout: await optionsTable.get("waitTimeout"),
-	});
-	const medias = [...$$("video"), ...$$("audio")];
 	const {
 		shortcut,
 		timeRate,
@@ -52,25 +47,18 @@ async function main() {
 		...controls.decreaseVolume,
 		...controls.toggleMute,
 	];
+	let currentMedia = null;
 	let activated = false;
-	let currentMedia = medias[0];
-	for (const media of medias) {
-		media.addEventListener("play", () => currentMedia = media);
-	}
+	listenMedias($$("video, audio"));
+	onAppend({
+		selectors: "video, audio",
+		options: { childList: true, subtree: true },
+		listener: listenMedias,
+	});
 	document.addEventListener("keydown", (e) => {
-		if (e.ctrlKey && e.key.toUpperCase() === shortcut) {
+		if (currentMedia && e.ctrlKey && e.key.toUpperCase() === shortcut) {
 			e.preventDefault();
-			if (activated) {
-				document.removeEventListener("keydown", keydownListener);
-			} else {
-				document.addEventListener("keydown", keydownListener);
-			}
-			activated = !activated;
-			const message = (
-				`media player control ${activated ? "" : "de"}activated`
-			);
-			console.log(message);
-			showPopup(createPopup(), message, 1200);
+			setActivated(!activated);
 		} else if (e.ctrlKey && e.key.toUpperCase() === "L") {
 			e.preventDefault();
 			console.log("media controls");
@@ -79,6 +67,39 @@ async function main() {
 			showPopup(createPopup(), message, 5000);
 		}
 	});
+
+	function listenMedias(medias) {
+		if (currentMedia == null) {
+			currentMedia = medias?.[0];
+		}
+		for (const media of medias) {
+			media.addEventListener("play", () => currentMedia = media);
+			onRemoved({
+				element: media,
+				options: { childList: true, subtree: true },
+				listener: () => {
+					if (currentMedia === media) {
+						currentMedia = null;
+						setActivated(false);
+					}
+				},
+			});
+		}
+	}
+
+	function setActivated(value) {
+		activated = value;
+		if (!activated) {
+			document.removeEventListener("keydown", keydownListener);
+		} else {
+			document.addEventListener("keydown", keydownListener);
+		}
+		const message = (
+			`media player control ${activated ? "" : "de"}activated`
+		);
+		console.log(message);
+		showPopup(createPopup(), message, 1200);
+	}
 
 	function isControlMediaKey(e) {
 		return keys.includes(e.key);
