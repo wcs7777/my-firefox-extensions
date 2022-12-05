@@ -62,12 +62,6 @@ onlyShortcut(byId("shortcut"));
 ]
 	.forEach(onlyFloat);
 
-[
-	byId("waitTimeout"),
-	byId("waitInterval"),
-]
-	.forEach(onlyInt);
-
 function setFieldsValues(ids2values) {
 	for (const [id, value] of Object.entries(ids2values)) {
 		setField(id, value);
@@ -123,14 +117,6 @@ function onlyFloat(target) {
 			!isNavigationKey(e) &&
 			true
 		) {
-			e.preventDefault();
-		}
-	});
-}
-
-function onlyInt(target) {
-	target.addEventListener("keydown", (e) => {
-		if (!isNumber(e.key) && !isNavigationKey(e)) {
 			e.preventDefault();
 		}
 	});
