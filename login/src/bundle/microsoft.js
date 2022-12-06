@@ -9,6 +9,14 @@
 		return document.getElementById(elementId);
 	}
 
+	function digits() {
+		return "0123456789";
+	}
+
+	function isNumber(character) {
+		return digits().indexOf(character) > -1;
+	}
+
 	function isString(value) {
 	  return Object.prototype.toString.call(value) === "[object String]"
 	}
@@ -21,8 +29,45 @@
 		return typeof value === "object" ? value : { [value]: value };
 	}
 
-	function sleep(ms) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
+	function waitElement({
+		selectors,
+		target=document.body,
+		timeout=10000,
+		interval=500,
+	}={}) {
+		return new Promise((resolve, reject) => {
+			const idInterval = setInterval(() => {
+				const element = $(selectors, target);
+				if (element != undefined) {
+					clearTimers();
+					resolve(element);
+				}
+			}, interval);
+			const idTimeout = (
+				timeout > 0 ?
+				setTimeout(() => {
+					clearTimers();
+					reject(
+						new Error(`${timeout} expired without found ${selectors}`),
+					);
+				}, timeout) :
+				false
+			);
+
+			function clearTimers() {
+				clearInterval(idInterval);
+				if (idTimeout !== false) {
+					clearTimeout(idTimeout);
+				}
+			}
+
+		});
+	}
+
+	async function waitInputToSetValue(selectors, value) {
+		const input = await waitElement({ selectors });
+		input.value = value;
+		input.dispatchEvent(new Event("input", { bubbles: true }));
 	}
 
 	class Table {
@@ -101,26 +146,44 @@
 	const optionsTable = new Table("options", database);
 	new Table("utils", database);
 
-	(async () => {
-		const { shortcut, email, password } = await optionsTable.getAll();
+	function listenLogin(logins) {
 		document.addEventListener("keydown", async (e) => {
 			try {
-				if (e.ctrlKey && e.key.toUpperCase() === shortcut) {
+				if (e.altKey && isNumber(e.key)) {
 					e.preventDefault();
-					await login(email, password);
+					const index = Math.max(
+						0,
+						Math.min(
+							parseInt(e.key) - 1,
+							logins.length - 1,
+						),
+					);
+					await logins[index]();
 				}
 			} catch (error) {
 				console.error(error);
 			}
 		});
+	}
+
+	(async () => {
+		const credentials = await optionsTable.get("microsoft");
+		listenLogin(
+			credentials.map(({ user, password }) => createLogin(user, password)),
+		);
 	})()
 		.catch(console.error);
 
-	async function login(email, password) {
-		byId("login").value = email;
-		byId("password").value = password;
-		await sleep(1000);
-		$('form[action="/login/"]').submit();
+	function createLogin(user, password) {
+		return async () => {
+			if (byId("displayName") == null) {
+				await waitInputToSetValue("#i0116", user);
+				byId("idSIButton9").click();
+			} else {
+				await waitInputToSetValue("#i0118", password);
+				byId("idSIButton9").click();
+			}
+		};
 	}
 
 })();
