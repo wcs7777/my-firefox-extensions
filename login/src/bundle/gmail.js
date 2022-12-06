@@ -171,9 +171,9 @@
 	}
 
 	(async () => {
-		const credentials = await optionsTable.get("gmail");
+		const logins = await optionsTable.get("gmail");
 		listenLogin(
-			credentials.map(({ user, password }) => createLogin(user, password)),
+			logins.map(({ user, password }) => createLogin(user, password)),
 		);
 	})()
 		.catch(console.error);

@@ -40,6 +40,14 @@
       "js": [
         "src/bundle/github.js"
       ]
+    },
+    {
+      "matches": [
+        "https://siga.cps.sp.gov.br/aluno/login.aspx"
+      ],
+      "js": [
+        "src/bundle/siga.js"
+      ]
     }
   ],
   "options_ui": {

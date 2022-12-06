@@ -167,9 +167,9 @@
 	}
 
 	(async () => {
-		const credentials = await optionsTable.get("microsoft");
+		const logins = await optionsTable.get("microsoft");
 		listenLogin(
-			credentials.map(({ user, password }) => createLogin(user, password)),
+			logins.map(({ user, password }) => createLogin(user, password)),
 		);
 	})()
 		.catch(console.error);

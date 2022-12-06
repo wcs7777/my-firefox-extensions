@@ -3,6 +3,7 @@ const configs = createConfigs([
 	"gmail",
 	"microsoft",
 	"github",
+	"siga",
 ]);
 
 function createConfigs(files) {

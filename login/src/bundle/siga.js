@@ -25,6 +25,10 @@
 		return typeof value === "object" ? value : { [value]: value };
 	}
 
+	function sleep(ms) {
+		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+
 	function waitElement({
 		selectors,
 		target=document.body,
@@ -64,11 +68,6 @@
 		const input = await waitElement({ selectors });
 		input.value = value;
 		input.dispatchEvent(new Event("input", { bubbles: true }));
-	}
-
-	async function waitFormToSubmit(selectors) {
-		const form = await waitElement({ selectors });
-		return form.submit();
 	}
 
 	class Table {
@@ -168,7 +167,7 @@
 	}
 
 	(async () => {
-		const logins = await optionsTable.get("forvo");
+		const logins = await optionsTable.get("siga");
 		listenLogin(
 			logins.map(({ user, password }) => createLogin(user, password)),
 		);
@@ -177,9 +176,10 @@
 
 	function createLogin(user, password) {
 		return async () => {
-			await waitInputToSetValue("#login", user);
-			await waitInputToSetValue("#password", password);
-			await waitFormToSubmit("form[action='/login/']");
+			await waitInputToSetValue("#vSIS_USUARIOID", user);
+			await waitInputToSetValue("#vSIS_USUARIOSENHA", password);
+			await sleep(500);
+			$("input[type='button']").click();
 		};
 	}
 

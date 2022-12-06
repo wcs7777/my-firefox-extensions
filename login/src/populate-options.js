@@ -24,5 +24,11 @@ export default function populateOptions(table) {
 				password: "password",
 			},
 		],
+		"siga": [
+			{
+				user: "user",
+				password: "password",
+			},
+		],
 	});
 }

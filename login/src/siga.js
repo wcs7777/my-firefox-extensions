@@ -1,9 +1,9 @@
 import { optionsTable } from "./tables.js";
-import { waitFormToSubmit, waitInputToSetValue } from "./utils.js";
+import { $, sleep, waitInputToSetValue } from "./utils.js";
 import listenLogin from "./listen-login.js";
 
 (async () => {
-	const logins = await optionsTable.get("github");
+	const logins = await optionsTable.get("siga");
 	listenLogin(
 		logins.map(({ user, password }) => createLogin(user, password)),
 	);
@@ -12,8 +12,9 @@ import listenLogin from "./listen-login.js";
 
 function createLogin(user, password) {
 	return async () => {
-		await waitInputToSetValue("#login_field", user);
-		await waitInputToSetValue("#password", password);
-		await waitFormToSubmit("form[action='/session']");
+		await waitInputToSetValue("#vSIS_USUARIOID", user);
+		await waitInputToSetValue("#vSIS_USUARIOSENHA", password);
+		await sleep(500);
+		$("input[type='button']").click();
 	};
 }

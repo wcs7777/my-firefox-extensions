@@ -3,9 +3,9 @@ import { waitFormToSubmit, waitInputToSetValue } from "./utils.js";
 import listenLogin from "./listen-login.js";
 
 (async () => {
-	const credentials = await optionsTable.get("forvo");
+	const logins = await optionsTable.get("forvo");
 	listenLogin(
-		credentials.map(({ user, password }) => createLogin(user, password)),
+		logins.map(({ user, password }) => createLogin(user, password)),
 	);
 })()
 	.catch(console.error);

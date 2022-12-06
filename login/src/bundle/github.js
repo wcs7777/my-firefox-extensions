@@ -168,9 +168,9 @@
 	}
 
 	(async () => {
-		const credentials = await optionsTable.get("github");
+		const logins = await optionsTable.get("github");
 		listenLogin(
-			credentials.map(({ user, password }) => createLogin(user, password)),
+			logins.map(({ user, password }) => createLogin(user, password)),
 		);
 	})()
 		.catch(console.error);
