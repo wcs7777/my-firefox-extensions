@@ -10,6 +10,79 @@ export function byId(elementId) {
 	return document.getElementById(elementId);
 }
 
+export function appendChildren(parent, children) {
+	for (const child of toArray(children)) {
+		parent.appendChild(child);
+	}
+}
+
+export function tag({
+	tagName,
+	id,
+	className,
+	attributes,
+	listeners,
+	cssText,
+	textNode,
+	children,
+}={}) {
+	const element = document.createElement(tagName);
+	if (id) {
+		element.id = id;
+	}
+	if (className) {
+		element.className = className;
+	}
+	if (attributes) {
+		for (const { name, value } of toArray(attributes)) {
+			element.setAttribute(name, value);
+		}
+	}
+	if (listeners) {
+		for (const { type, listener } of toArray(listeners)) {
+			element.addEventListener(type, listener);
+		}
+	}
+	if (cssText) {
+		element.style.cssText = cssText;
+	}
+	if (textNode) {
+		element.appendChild(document.createTextNode(textNode));
+	}
+	if (children) {
+		appendChildren(element, children);
+	}
+	return element;
+}
+
+export function option(textNode, value) {
+	return tag({
+		tagName: "option",
+		textNode,
+		attributes: { name: "value", value },
+	});
+}
+
+export function sequence(first, last, step=1) {
+	const array = [];
+	if (first <= last) {
+		if (step <= 0) {
+			throw new Error("Step must be positive");
+		}
+		for (let i = first; i <= last; i += step) {
+			array.push(i);
+		}
+	} else {
+		if (step >= 0) {
+			throw new Error("Step must be negative");
+		}
+		for (let i = first; i >= last; i -= step) {
+			array.push(i);
+		}
+	}
+	return array;
+}
+
 export function digits() {
 	return "0123456789";
 }

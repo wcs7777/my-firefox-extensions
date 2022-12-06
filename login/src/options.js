@@ -1,5 +1,23 @@
 import { optionsTable } from "./tables.js";
-import { byId } from "./utils.js";
+import { appendChildren, byId, option, sequence, tag } from "./utils.js";
+
+document.addEventListener("DOMContentLoaded", async () => {
+	try {
+		const domains = await optionsTable.getKeys();
+		const shortcuts = sequence(1, 9).map((n) => n.toString());
+		appendChildren(byId("domain"), createOptions(domains));
+		appendChildren(byId("removeDomain"), createOptions(domains));
+		appendChildren(byId("showUsersDomain"), createOptions(domains));
+		appendChildren(byId("shortcut"), createOptions(shortcuts));
+		appendChildren(byId("removeShortcut"), createOptions(shortcuts));
+
+		function createOptions(values) {
+			return values.map((value) => option(value, value));
+		}
+	} catch (error) {
+		console.error(error);
+	}
+});
 
 byId("setLogin").addEventListener("submit", async (e) => {
 	try {
@@ -28,6 +46,28 @@ byId("removeLogin").addEventListener("submit", async (e) => {
 			filtered.push({ user: "user", password: "password" });
 		}
 		await optionsTable.set(domain, filtered);
+	} catch (error) {
+		console.error(error);
+	}
+});
+
+byId("showUsersDomain").addEventListener("change", async (e) => {
+	try {
+		const id = "users";
+		byId(id)?.remove();
+		const logins = await optionsTable.get(e.target.value);
+		byId("showUsers").appendChild(
+			tag({
+				tagName: "div",
+				id,
+				children: logins.map(({ user }, index) => {
+					return tag({
+						tagName: "div",
+						textNode: `${index + 1} - ${user}`,
+					});
+				}),
+			}),
+		);
 	} catch (error) {
 		console.error(error);
 	}
