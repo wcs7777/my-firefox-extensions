@@ -51,6 +51,16 @@ byId("removeLogin").addEventListener("submit", async (e) => {
 	}
 });
 
+byId("setLoginsWithBundle").addEventListener("submit", async (e) => {
+	try {
+		e.preventDefault();
+		const bundle = JSON.parse(extractFieldValue("bundleLogins"));
+		await optionsTable.set(bundle);
+	} catch (error) {
+		console.error(error);
+	}
+});
+
 byId("showUsersDomain").addEventListener("change", async (e) => {
 	try {
 		const id = "users";
