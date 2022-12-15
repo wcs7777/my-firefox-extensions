@@ -5,8 +5,43 @@
 		return Array.from(target.querySelectorAll(selectors));
 	}
 
-	function tag(tagName) {
-		return document.createElement(tagName);
+	function tag({
+		tagName,
+		id,
+		className,
+		attributes,
+		listeners,
+		cssText,
+		textNode,
+		children,
+	}={}) {
+		const element = document.createElement(tagName);
+		if (id) {
+			element.id = id;
+		}
+		if (className) {
+			element.className = className;
+		}
+		if (attributes) {
+			for (const { name, value } of toArray(attributes)) {
+				element.setAttribute(name, value);
+			}
+		}
+		if (listeners) {
+			for (const { type, listener } of toArray(listeners)) {
+				element.addEventListener(type, listener);
+			}
+		}
+		if (cssText) {
+			element.style.cssText = cssText;
+		}
+		if (textNode) {
+			element.appendChild(document.createTextNode(textNode));
+		}
+		if (children) {
+			appendChildren(element, children);
+		}
+		return element;
 	}
 
 	function onAppend({
@@ -84,6 +119,14 @@
 		return new Promise((resolve) => {
 			setTimeout(resolve, ms);
 		});
+	}
+
+	function numbers() {
+		return "0123456789";
+	}
+
+	function isNumber(character) {
+		return numbers().indexOf(character) > -1;
 	}
 
 	function isString(value) {
@@ -192,6 +235,8 @@
 	async function main() {
 		const {
 			shortcut,
+			gotoShortcut,
+			showControlsShortcut,
 			initialDelay,
 			timeRate,
 			timeCtrlRate,
@@ -219,6 +264,7 @@
 		let currentMedia = null;
 		let activated = false;
 		console.log(`shortcut: ${shortcut}`);
+		console.log(`gotoShortcut: ${gotoShortcut}`);
 		console.log(`initialDelay: ${initialDelay}`);
 		console.log(`timeRate: ${timeRate}`);
 		console.log(`timeCtrlRate: ${timeCtrlRate}`);
@@ -237,12 +283,6 @@
 			if (currentMedia && e.ctrlKey && e.key.toUpperCase() === shortcut) {
 				e.preventDefault();
 				setActivated(!activated);
-			} else if (e.ctrlKey && e.key.toUpperCase() === "L") {
-				e.preventDefault();
-				console.log("media controls");
-				const message = JSON.stringify(controls, null, 4);
-				console.log(message);
-				showPopup(createPopup(), message, 5000);
 			}
 		});
 
@@ -271,14 +311,83 @@
 			activated = value;
 			if (!activated) {
 				document.removeEventListener("keydown", keydownListener);
+				document.removeEventListener("keydown", gotoTimeListener);
+				document.removeEventListener("keydown", showControlsListener);
 			} else {
 				document.addEventListener("keydown", keydownListener);
+				document.addEventListener("keydown", gotoTimeListener);
+				document.addEventListener("keydown", showControlsListener);
 			}
 			const message = (
 				`media player control ${activated ? "" : "de"}activated`
 			);
 			console.log(message);
-			showPopup(createPopup(), message, 1200);
+			showPopup(createPopup(message), 1200);
+		}
+
+		function gotoTimeListener(e) {
+			if (e.ctrlKey && e.key.toUpperCase() === gotoShortcut) {
+				e.preventDefault();
+				setActivated(false);
+				const input = tag({
+					tagName: "input",
+					cssText: `
+					position: fixed;
+					width: 100px;
+					height: 40px;
+					top: 50%;
+					left: 50%;
+					margin-top: -20px;
+					margin-left: -50px;
+					padding: 10px;
+					color: rgb(255, 255, 255);
+					background-color: rgba(0, 0, 0, .8);
+					font: 25px/1.2 Arial, sens-serif;
+					z-index: 99999;
+				`,
+					listeners: {
+						type: "keydown",
+						listener: (e) => {
+							if (e.key === "Enter") {
+								const [hours, minutes, seconds] = splitTime(e.target.value);
+								currentMedia.currentTime = Math.min(
+									currentMedia.duration,
+									hours * 3600 + minutes * 60 + seconds,
+								);
+								finalize();
+								return;
+							} else if (e.key === "Escape") {
+								finalize();
+								return;
+							}
+							const oldValue = e.target.value;
+							setTimeout(() => {
+								if (!isTimeValid(e.target.value)) {
+									e.target.value = oldValue;
+								}
+							}, 1);
+
+							function finalize() {
+								e.preventDefault();
+								e.target.remove();
+								setActivated(true);
+							}
+						},
+					},
+				});
+				document.body.appendChild(input);
+				input.focus();
+			}
+		}
+
+		function showControlsListener(e) {
+			if (e.ctrlKey && e.key.toUpperCase() === showControlsShortcut) {
+				e.preventDefault();
+				console.log("media controls");
+				const message = JSON.stringify(controls, null, 4);
+				console.log(message);
+				showPopup(createPopup(message), 5000);
+			}
 		}
 
 		function isControlMediaKey(e) {
@@ -328,8 +437,7 @@
 					});
 					if (action.includes("Speed")) {
 						showPopup(
-							createPopup(),
-							currentMedia.playbackRate.toFixed(2),
+							createPopup(currentMedia.playbackRate.toFixed(2)),
 							200,
 						);
 					}
@@ -399,25 +507,66 @@
 		}[action]();
 	}
 
-	function createPopup() {
-		const popup = tag("span");
-		popup.style.cssText = `
-		position: fixed;
-		top: 100px;
-		left: 80px;
-		padding: 2px;
-		color: rgb(255, 255, 255);
-		background-color: rgba(0, 0, 0, .8);
-		font: 25px/1.2 Arial, sens-serif;
-		z-index: 99999;
-	`;
-		return popup;
+	function createPopup(textNode) {
+		return tag({
+			tagName: "span",
+			textNode,
+			cssText: `
+			position: fixed;
+			top: 100px;
+			left: 80px;
+			padding: 2px;
+			color: rgb(255, 255, 255);
+			background-color: rgba(0, 0, 0, .8);
+			font: 25px/1.2 Arial, sens-serif;
+			z-index: 99999;
+		`,
+		});
 	}
 
-	function showPopup(popup, message, timeout) {
-		popup.textContent = message;
+	function showPopup(popup, timeout) {
 		document.body.appendChild(popup);
 		setTimeout(() => popup.remove(), timeout);
+	}
+
+	function isTimeValid(time, separator=":", maxSeparators=2) {
+		let separators = 0;
+		let digits = 0;
+		for (let i = 0; i < time.length; ++i) {
+			if (isNumber(time[i])) {
+				++digits;
+				if (digits > 2) {
+					return false;
+				}
+			} else if (time[i] === separator && i > 0 && isNumber(time[i - 1])) {
+				digits = 0;
+				++separators;
+				if (separators > maxSeparators) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	function splitTime(time, maxSeparators=2) {
+		const parts = [];
+		let part = "";
+		for (let i = 0; i < time.length; i++) {
+			if (isNumber(time[i])) {
+				part += time[i];
+			} else {
+				parts.push(parseInt(part));
+				part = "";
+			}
+		}
+		parts.push(parseInt(part));
+		for (let i = parts.length; i <= maxSeparators; ++i) {
+			parts.unshift(0);
+		}
+		return parts;
 	}
 
 })();

@@ -10,8 +10,60 @@ export function byId(elementId) {
 	return document.getElementById(elementId);
 }
 
-export function tag(tagName) {
-	return document.createElement(tagName);
+export function isNavigationKey(keydownEvent) {
+	return keydownEvent.ctrlKey || [
+		"Backspace",
+		"Delete",
+		"ArrowUp",
+		"ArrowRight",
+		"ArrowDown",
+		"ArrowLeft",
+		"Tab",
+		"CapsLock",
+		"Home",
+		"End",
+		"Enter",
+	]
+		.includes(keydownEvent.key);
+}
+
+export function tag({
+	tagName,
+	id,
+	className,
+	attributes,
+	listeners,
+	cssText,
+	textNode,
+	children,
+}={}) {
+	const element = document.createElement(tagName);
+	if (id) {
+		element.id = id;
+	}
+	if (className) {
+		element.className = className;
+	}
+	if (attributes) {
+		for (const { name, value } of toArray(attributes)) {
+			element.setAttribute(name, value);
+		}
+	}
+	if (listeners) {
+		for (const { type, listener } of toArray(listeners)) {
+			element.addEventListener(type, listener);
+		}
+	}
+	if (cssText) {
+		element.style.cssText = cssText;
+	}
+	if (textNode) {
+		element.appendChild(document.createTextNode(textNode));
+	}
+	if (children) {
+		appendChildren(element, children);
+	}
+	return element;
 }
 
 export function textNode(data) {

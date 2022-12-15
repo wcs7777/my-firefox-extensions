@@ -1,6 +1,8 @@
 export default function populateOptions(table) {
 	return table.set({
 		shortcut: ";",
+		gotoShortcut: "G",
+		showControlsShortcut: "L",
 		initialDelay: 5000,
 		timeRate: 5.00,
 		timeCtrlRate: 2.50,

@@ -1,5 +1,5 @@
 import { optionsTable, controlsTable } from "./tables.js";
-import { byId, file2object, isNumber } from "./utils.js";
+import { byId, file2object, isNavigationKey, isNumber } from "./utils.js";
 import downloadObject from "./download-object.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -52,7 +52,13 @@ byId("updateControlsTable").addEventListener("submit", async (e) => {
 	}
 });
 
-onlyShortcut(byId("shortcut"));
+[
+	byId("shortcut"),
+	byId("gotoShortcut"),
+	byId("showControlsShortcut"),
+]
+	.forEach(onlyShortcut);
+
 onlyInt(byId("initialDelay"));
 
 [
@@ -133,21 +139,4 @@ function onlyFloat(target) {
 			e.preventDefault();
 		}
 	});
-}
-
-function isNavigationKey(keydownEvent) {
-	return keydownEvent.ctrlKey || [
-		"Backspace",
-		"Delete",
-		"ArrowUp",
-		"ArrowRight",
-		"ArrowDown",
-		"ArrowLeft",
-		"Tab",
-		"CapsLock",
-		"Home",
-		"End",
-		"Enter",
-	]
-		.includes(keydownEvent.key);
 }
