@@ -159,6 +159,12 @@ export function onLocationChange(listener) {
 	return observer;
 }
 
+export function sleep(ms) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms);
+	});
+}
+
 export function letters() {
 	return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 }

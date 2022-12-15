@@ -4,6 +4,7 @@ import {
 	onAppend,
 	onLocationChange,
 	onRemoved,
+	sleep,
 	tag,
 } from "./utils.js";
 
@@ -24,6 +25,7 @@ import {
 async function main() {
 	const {
 		shortcut,
+		initialDelay,
 		timeRate,
 		timeCtrlRate,
 		speedRate,
@@ -49,6 +51,15 @@ async function main() {
 	];
 	let currentMedia = null;
 	let activated = false;
+	console.log(`shortcut: ${shortcut}`);
+	console.log(`initialDelay: ${initialDelay}`);
+	console.log(`timeRate: ${timeRate}`);
+	console.log(`timeCtrlRate: ${timeCtrlRate}`);
+	console.log(`speedRate: ${speedRate}`);
+	console.log(`speedCtrlRate: ${speedCtrlRate}`);
+	console.log("delay begin");
+	await sleep(initialDelay);
+	console.log("delay end");
 	listenMedias($$("video, audio"));
 	onAppend({
 		selectors: "video, audio",

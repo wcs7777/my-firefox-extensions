@@ -80,6 +80,12 @@
 		return observer;
 	}
 
+	function sleep(ms) {
+		return new Promise((resolve) => {
+			setTimeout(resolve, ms);
+		});
+	}
+
 	function isString(value) {
 	  return Object.prototype.toString.call(value) === "[object String]"
 	}
@@ -186,6 +192,7 @@
 	async function main() {
 		const {
 			shortcut,
+			initialDelay,
 			timeRate,
 			timeCtrlRate,
 			speedRate,
@@ -211,6 +218,15 @@
 		];
 		let currentMedia = null;
 		let activated = false;
+		console.log(`shortcut: ${shortcut}`);
+		console.log(`initialDelay: ${initialDelay}`);
+		console.log(`timeRate: ${timeRate}`);
+		console.log(`timeCtrlRate: ${timeCtrlRate}`);
+		console.log(`speedRate: ${speedRate}`);
+		console.log(`speedCtrlRate: ${speedCtrlRate}`);
+		console.log("delay begin");
+		await sleep(initialDelay);
+		console.log("delay end");
 		listenMedias($$("video, audio"));
 		onAppend({
 			selectors: "video, audio",

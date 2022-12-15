@@ -53,6 +53,7 @@ byId("updateControlsTable").addEventListener("submit", async (e) => {
 });
 
 onlyShortcut(byId("shortcut"));
+onlyInt(byId("initialDelay"));
 
 [
 	byId("timeRate"),
@@ -105,6 +106,18 @@ function onlyShortcut(target) {
 		if (e.key.length === 1) {
 			e.preventDefault();
 			e.target.value = e.key.toUpperCase();
+		}
+	});
+}
+
+function onlyInt(target) {
+	target.addEventListener("keydown", (e) => {
+		if (
+			!isNumber(e.key) &&
+			!isNavigationKey(e) &&
+			true
+		) {
+			e.preventDefault();
 		}
 	});
 }
