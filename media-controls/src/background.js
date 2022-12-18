@@ -12,6 +12,9 @@ import { utilsTable, optionsTable, controlsTable } from "./tables.js";
 	if (!browser.browserAction.onClicked.hasListener(actionOnClicked)) {
 		browser.browserAction.onClicked.addListener(actionOnClicked);
 	}
+	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
+		browser.storage.onChanged.addListener(storageOnChanged);
+	}
 	await updateActivated(await optionsTable.get("activated"));
 	return "Initialization finished";
 })()
@@ -28,9 +31,17 @@ async function populate(table, fn) {
 
 async function actionOnClicked() {
 	try {
-		const toggle = !await optionsTable.get("activated");
-		await optionsTable.set("activated", toggle);
-		await updateActivated(toggle);
+		await optionsTable.set("activated", !await optionsTable.get("activated"));
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function storageOnChanged(changes) {
+	try {
+		if (changes[optionsTable.name]) {
+			await updateActivated(await optionsTable.get("activated"));
+		}
 	} catch (error) {
 		console.error(error);
 	}
@@ -39,19 +50,26 @@ async function actionOnClicked() {
 async function updateActivated(activated) {
 	if (activated) {
 		console.log("activated");
-		await browser.browserAction.setIcon({
-			path: {
-				16: "../icons/icon-16.png",
-				32: "../icons/icon-32.png",
-			},
-		});
+		await changeActionIcons({ iconsPrefix: "icon" });
 	} else {
 		console.log("deactivated");
-		await browser.browserAction.setIcon({
-			path: {
-				16: "../icons/icon-dark-16.png",
-				32: "../icons/icon-dark-32.png",
-			},
-		});
+		await changeActionIcons({ iconsPrefix: "icon-dark" });
 	}
+}
+
+function changeActionIcons({
+	iconsPrefix="icon",
+	iconsPath="../icons",
+	iconsExtension="png",
+}={}) {
+	return browser.browserAction.setIcon({
+		path: "16 19 32 38"
+			.split(" ")
+			.reduce((obj, size) => {
+				return {
+					...obj,
+					[size]: `${iconsPath}/${iconsPrefix}-${size}.${iconsExtension}`,
+				};
+			}, {}),
+	});
 }

@@ -220,8 +220,8 @@
 
 	(async () => {
 		try {
-			const activated = await optionsTable.get("activated");
-			if (activated) {
+			await sleep(1000);
+			if (await optionsTable.get("activated")) {
 				main().catch(console.error);
 				onLocationChange(() => main().catch(console.error));
 			}
