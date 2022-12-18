@@ -30,5 +30,11 @@ export default function populateOptions(table) {
 				password: "password",
 			},
 		],
+		"linkedin": [
+			{
+				user: "user",
+				password: "password",
+			},
+		],
 	});
 }

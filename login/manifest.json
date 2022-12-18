@@ -48,6 +48,14 @@
       "js": [
         "src/bundle/siga.js"
       ]
+    },
+    {
+      "matches": [
+        "https://br.linkedin.com/"
+      ],
+      "js": [
+        "src/bundle/linkedin.js"
+      ]
     }
   ],
   "options_ui": {

@@ -5,10 +5,6 @@
 		return target.querySelector(selectors);
 	}
 
-	function byId(elementId) {
-		return document.getElementById(elementId);
-	}
-
 	function digits() {
 		return "0123456789";
 	}
@@ -171,7 +167,7 @@
 	}
 
 	(async () => {
-		const logins = await optionsTable.get("gmail");
+		const logins = await optionsTable.get("linkedin");
 		listenLogin(
 			logins.map(({ user, password }) => createLogin(user, password)),
 		);
@@ -180,14 +176,10 @@
 
 	function createLogin(user, password) {
 		return async () => {
-			const ms = 2000;
-			await waitInputToSetValue("#identifierId", user);
-			await sleep(ms);
-			byId("identifierNext").click();
-			await sleep(ms);
-			await waitInputToSetValue("input[type='password']", password);
-			await sleep(ms);
-			byId("passwordNext").click();
+			await waitInputToSetValue("#session_key", user);
+			await waitInputToSetValue("#session_password", password);
+			await sleep(500);
+			$("form.sign-in-form").submit();
 		};
 	}
 

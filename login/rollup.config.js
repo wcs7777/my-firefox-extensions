@@ -4,6 +4,7 @@ const configs = createConfigs([
 	"microsoft",
 	"github",
 	"siga",
+	"linkedin",
 ]);
 
 function createConfigs(files) {

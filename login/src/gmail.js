@@ -12,7 +12,7 @@ import listenLogin from "./listen-login.js";
 
 function createLogin(user, password) {
 	return async () => {
-		const ms = 1500;
+		const ms = 2000;
 		await waitInputToSetValue("#identifierId", user);
 		await sleep(ms);
 		byId("identifierNext").click();
