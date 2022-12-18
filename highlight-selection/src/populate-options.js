@@ -1,6 +1,6 @@
 export default function populateOptions(table) {
 	return table.set({
-		shortcut: "S",
+		shortcut: "K",
 		color: "#f03b11",
 		backgroundColor: "",
 		underline: false,

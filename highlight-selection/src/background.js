@@ -13,7 +13,7 @@ import onClickedListener from "./on-clicked-listener.js";
 	if (!browser.storage.onChanged.hasListener(storageOnChanged)) {
 		browser.storage.onChanged.addListener(storageOnChanged);
 	}
-	await createMenuItem();
+	await updateActivated(await optionsTable.get("activated"));
 	return "Initialization finished";
 })()
 	.then(console.log)
@@ -21,11 +21,7 @@ import onClickedListener from "./on-clicked-listener.js";
 
 async function actionOnClicked() {
 	try {
-		await optionsTable.set(
-			"activated",
-			!await optionsTable.get("activated"),
-		);
-		await updateActivated();
+		await optionsTable.set("activated", !await optionsTable.get("activated"));
 	} catch (error) {
 		console.error(error);
 	}
@@ -34,33 +30,40 @@ async function actionOnClicked() {
 async function storageOnChanged(changes) {
 	try {
 		if (changes[optionsTable.name]) {
-			await updateActivated();
+			await updateActivated(await optionsTable.get("activated"));
 		}
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-async function updateActivated() {
-	if (await optionsTable.get("activated")) {
+async function updateActivated(activated) {
+	if (activated) {
 		console.log("activated");
-		await browser.browserAction.setIcon({
-			path: {
-				16: "../icons/icon-16.png",
-				32: "../icons/icon-32.png",
-			},
-		});
+		await changeActionIcons({ iconsPrefix: "icon" });
 		await createMenuItem();
 	} else {
 		console.log("deactivated");
-		await browser.browserAction.setIcon({
-			path: {
-				16: "../icons/icon-dark-16.png",
-				32: "../icons/icon-dark-32.png",
-			},
-		});
+		await changeActionIcons({ iconsPrefix: "icon-dark" });
 		await removeMenuItem();
 	}
+}
+
+function changeActionIcons({
+	iconsPrefix="icon",
+	iconsPath="../icons",
+	iconsExtension="png",
+}={}) {
+	return browser.browserAction.setIcon({
+		path: "16 19 32 38"
+			.split(" ")
+			.reduce((obj, size) => {
+				return {
+					...obj,
+					[size]: `${iconsPath}/${iconsPrefix}-${size}.${iconsExtension}`,
+				};
+			}, {}),
+	});
 }
 
 async function createMenuItem() {
