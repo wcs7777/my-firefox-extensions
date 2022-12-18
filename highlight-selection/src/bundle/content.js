@@ -141,6 +141,18 @@
 				if (!browser.runtime.onMessage.hasListener(onMessage)) {
 					browser.runtime.onMessage.addListener(onMessage);
 				}
+
+				function onMessage({ getData, highlight }, sender, sendResponse) {
+					if (getData) {
+						sendResponse({
+							title: document.title,
+							highlights: highlights(),
+						});
+					} else if (highlight) {
+						highlighSelection(style);
+						sendResponse({ highlight: true });
+					}
+				}
 			}
 		} catch (error) {
 			console.error(error);
@@ -180,15 +192,6 @@
 		span.setAttribute(attribute, true);
 		span.appendChild(textNode(text));
 		return span;
-	}
-
-	function onMessage({ getData }, sender, sendResponse) {
-		if (getData) {
-			sendResponse({
-				title: document.title,
-				highlights: highlights(),
-			});
-		}
 	}
 
 })();

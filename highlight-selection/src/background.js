@@ -1,6 +1,9 @@
 import populateOptions from "./populate-options.js";
 import { utilsTable, optionsTable } from "./tables.js";
-import onClickedListener from "./on-clicked-listener.js";
+import {
+	createMenuItem,
+	onClickedListeners,
+} from "./menu-items.js";
 
 (async () => {
 	if (!await utilsTable.get(optionsTable.name)) {
@@ -41,11 +44,11 @@ async function updateActivated(activated) {
 	if (activated) {
 		console.log("activated");
 		await changeActionIcons({ iconsPrefix: "icon" });
-		await createMenuItem();
+		await setMenuItems();
 	} else {
 		console.log("deactivated");
 		await changeActionIcons({ iconsPrefix: "icon-dark" });
-		await removeMenuItem();
+		await removeMenuItems();
 	}
 }
 
@@ -66,16 +69,28 @@ function changeActionIcons({
 	});
 }
 
-async function createMenuItem() {
-	await removeMenuItem();
-	const menuItemId = browser.menus.create({
+async function setMenuItems() {
+	await removeMenuItems();
+	const parentId = createMenuItem({
+		id: "parent",
+		title: "Highlight",
+		contexts: ["all"],
+	});
+	const showId = createMenuItem({
 		id: "show-highlights",
 		title: "Show Highlights",
 		contexts: ["all"],
+		parentId,
 	});
-	onClickedListener.add(async (info, tab) => {
+	const highlightId = createMenuItem({
+		id: "highlight-selection",
+		title: "Highlight Selection",
+		contexts: ["selection"],
+		parentId,
+	});
+	onClickedListeners.add(async (info, tab) => {
 		try {
-			if (info.menuItemId === menuItemId) {
+			if (info.menuItemId === showId) {
 				const data = await browser.tabs.sendMessage(
 					tab.id, { getData: true },
 				);
@@ -96,9 +111,18 @@ async function createMenuItem() {
 			console.error(error);
 		}
 	});
+	onClickedListeners.add(async (info, tab) => {
+		try {
+			if (info.menuItemId === highlightId) {
+				await browser.tabs.sendMessage(tab.id, { highlight: true });
+			}
+		} catch (error) {
+			console.error(error);
+		}
+	});
 }
 
-async function removeMenuItem() {
+async function removeMenuItems() {
 	await browser.menus.removeAll();
-	onClickedListener.remove();
+	onClickedListeners.removeAll();
 }
