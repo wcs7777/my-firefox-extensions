@@ -36,5 +36,11 @@ export default function populateOptions(table) {
 				password: "password",
 			},
 		],
+		"quora": [
+			{
+				user: "user",
+				password: "password",
+			},
+		],
 	});
 }

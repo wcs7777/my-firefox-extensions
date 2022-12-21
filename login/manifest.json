@@ -51,10 +51,20 @@
     },
     {
       "matches": [
-        "https://br.linkedin.com/"
+        "https://br.linkedin.com/",
+        "https://www.linkedin.com/"
       ],
       "js": [
         "src/bundle/linkedin.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://pt.quora.com/",
+        "https://www.quora.com/"
+      ],
+      "js": [
+        "src/bundle/quora.js"
       ]
     }
   ],
