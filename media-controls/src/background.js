@@ -55,6 +55,14 @@ async function updateActivated(activated) {
 		console.log("deactivated");
 		await changeActionIcons({ iconsPrefix: "icon-dark" });
 	}
+	for (const tab of await getAllTabs()) {
+		browser.tabs.sendMessage(tab.id, { activated })
+			.catch((reason) => {
+				console.error(`Unable to send message to ${tab.url}`);
+				console.error(reason);
+				console.error();
+			});
+	}
 }
 
 function changeActionIcons({
@@ -72,4 +80,8 @@ function changeActionIcons({
 				};
 			}, {}),
 	});
+}
+
+function getAllTabs() {
+	return browser.tabs.query({});
 }

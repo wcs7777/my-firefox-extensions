@@ -3,7 +3,6 @@ import {
 	$$,
 	isNumber,
 	onAppend,
-	onLocationChange,
 	onRemoved,
 	sleep,
 	tag,
@@ -14,7 +13,19 @@ import {
 		await sleep(1000);
 		if (await optionsTable.get("activated")) {
 			main().catch(console.error);
-			onLocationChange(() => main().catch(console.error))
+		} else {
+			if (!browser.runtime.onMessage.hasListener(onMessage)) {
+				browser.runtime.onMessage.addListener(onMessage);
+			}
+		}
+
+		function onMessage({ activated }) {
+			if (activated !== undefined) {
+				if (activated) {
+					main().catch(console.error);
+					browser.runtime.onMessage.removeListener(onMessage);
+				}
+			}
 		}
 	} catch (error) {
 		console.error(error);
@@ -53,7 +64,7 @@ async function main() {
 		...controls.toggleMute,
 	];
 	let currentMedia = null;
-	let activated = false;
+	let inUse = false;
 	console.log(`shortcut: ${shortcut}`);
 	console.log(`gotoShortcut: ${gotoShortcut}`);
 	console.log(`initialDelay: ${initialDelay}`);
@@ -70,12 +81,28 @@ async function main() {
 		options: { childList: true, subtree: true },
 		listener: listenMedias,
 	});
-	document.addEventListener("keydown", (e) => {
+	document.addEventListener("keydown", toggleInUseKeydownListener);
+	if (!browser.runtime.onMessage.hasListener(onMessage)) {
+		browser.runtime.onMessage.addListener(onMessage);
+	}
+
+	function onMessage({ activated }) {
+		if (activated !== undefined) {
+			document.removeEventListener("keydown", toggleInUseKeydownListener);
+			if (activated) {
+				document.addEventListener("keydown", toggleInUseKeydownListener);
+			} else {
+				setInUse(false);
+			}
+		}
+	}
+
+	function toggleInUseKeydownListener(e) {
 		if (currentMedia && e.ctrlKey && e.key.toUpperCase() === shortcut) {
 			e.preventDefault();
-			setActivated(!activated);
+			setInUse(!inUse);
 		}
-	});
+	}
 
 	function listenMedias(medias) {
 		if (currentMedia == null) {
@@ -89,8 +116,8 @@ async function main() {
 				listener: () => {
 					if (currentMedia === media) {
 						currentMedia = null;
-						if (activated) {
-							setActivated(false);
+						if (inUse) {
+							setInUse(false);
 						}
 					}
 				},
@@ -98,9 +125,9 @@ async function main() {
 		}
 	}
 
-	function setActivated(value) {
-		activated = value;
-		if (!activated) {
+	function setInUse(value) {
+		inUse = value;
+		if (!inUse) {
 			document.removeEventListener("keydown", keydownListener);
 			document.removeEventListener("keydown", gotoTimeListener);
 			document.removeEventListener("keydown", showControlsListener);
@@ -110,7 +137,7 @@ async function main() {
 			document.addEventListener("keydown", showControlsListener);
 		}
 		const message = (
-			`media player control ${activated ? "" : "de"}activated`
+			`media player control ${inUse ? "is" : "is not"} in use`
 		);
 		console.log(message);
 		showPopup(createPopup(message), 1200);
@@ -119,7 +146,7 @@ async function main() {
 	function gotoTimeListener(e) {
 		if (e.ctrlKey && e.key.toUpperCase() === gotoShortcut) {
 			e.preventDefault();
-			setActivated(false);
+			setInUse(false);
 			const input = tag({
 				tagName: "input",
 				cssText: `
@@ -161,7 +188,7 @@ async function main() {
 						function finalize() {
 							e.preventDefault();
 							e.target.remove();
-							setActivated(true);
+							setInUse(true);
 						}
 					},
 				},

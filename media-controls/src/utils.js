@@ -140,36 +140,56 @@ export function waitElement({
 	});
 }
 
+export function mutationObserverWrapper({
+	target=document.body,
+	options={ childList: true },
+	mutationCallback,
+}={}) {
+	const mutation = new MutationObserver(mutationCallback);
+	mutation.observe(target, options);
+	return {
+		beginObservation() {
+			mutation.disconnect();
+			return mutation.observe(target, options);
+		},
+		stopObservation() {
+			return mutation.disconnect();
+		},
+	};
+}
+
 export function onAppend({
 	selectors,
 	target=document.body,
 	options={ childList: true },
 	listener,
-	errorLogger=console.error,
+	onRejected=console.error,
 }={}) {
-	const mutation = new MutationObserver((mutations) => {
-		for (const mutation of mutations) {
-			const addedNodes = Array.from(mutation.addedNodes);
-			let nodes = [];
-			if (addedNodes.length > 0) {
-				if (selectors) {
-					nodes = $$(selectors, target).filter((element) => {
-						return addedNodes.some((added) => {
-							return added.contains(element);
+	return mutationObserverWrapper({
+		target,
+		options,
+		mutationCallback: (mutations) => {
+			for (const mutation of mutations) {
+				const addedNodes = Array.from(mutation.addedNodes);
+				let nodes = [];
+				if (addedNodes.length > 0) {
+					if (selectors) {
+						nodes = $$(selectors, target).filter((element) => {
+							return addedNodes.some((added) => {
+								return added.contains(element);
+							});
 						});
-					});
-				} else {
-					nodes = addedNodes;
+					} else {
+						nodes = addedNodes;
+					}
+				}
+				if (nodes.length > 0) {
+					listener(nodes, mutation.target)?.catch(onRejected);
+					break;
 				}
 			}
-			if (nodes.length > 0) {
-				listener(nodes, mutation.target)?.catch(errorLogger);
-				break;
-			}
-		}
+		},
 	});
-	mutation.observe(target, options);
-	return mutation;
 }
 
 export function onRemoved({
@@ -177,38 +197,37 @@ export function onRemoved({
 	target=document.body,
 	options={ childList: true },
 	listener,
-	errorLogger=console.error,
+	onRejected=console.error,
 }={}) {
-	const observer = new MutationObserver((mutations) => {
-		for (const mutation of mutations) {
-			const removedNodes = Array.from(mutation.removedNodes);
-			if (removedNodes.some((removed) => removed.contains(element))) {
-				listener(element)?.catch(errorLogger);
-				observer.disconnect();
-				break;
+	return mutationObserverWrapper({
+		target,
+		options,
+		mutationCallback: (mutations) => {
+			for (const mutation of mutations) {
+				const removedNodes = Array.from(mutation.removedNodes);
+				if (removedNodes.some((removed) => removed.contains(element))) {
+					listener(element)?.catch(onRejected);
+					observer.disconnect();
+					break;
+				}
 			}
-		}
+		},
 	});
-	observer.observe(target, options);
-	return observer;
 }
 
-export function onLocationChange(listener) {
+export function onLocationChange(listener, onRejected=console.error) {
 	onLocationChange.current = (
 		onLocationChange.current || document.location.href
 	);
-	const observer = new MutationObserver(async () => {
-		if (onLocationChange.current !== document.location.href) {
-			onLocationChange.current = document.location.href;
-			if (listener.constructor.name === "AsyncFunction") {
-				await listener();
-			} else {
-				listener();
+	return mutationObserverWrapper({
+		options: { childList: true, subtree: true },
+		mutationCallback: () => {
+			if (onLocationChange.current !== document.location.href) {
+				onLocationChange.current = document.location.href;
+				listener()?.catch(onRejected);
 			}
-		}
+		},
 	});
-	observer.observe(document.body, { childList: true, subtree: true });
-	return observer;
 }
 
 export function sleep(ms) {
