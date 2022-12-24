@@ -382,7 +382,7 @@
 		await sleep(initialDelay);
 		console.log("delay end");
 		listenMedias($$("video, audio"));
-		onAppend({
+		const mediaAppendObserver = onAppend({
 			selectors: "video, audio",
 			options: { childList: true, subtree: true },
 			listener: listenMedias,
@@ -397,6 +397,7 @@
 				document.removeEventListener("keydown", toggleInUseKeydownListener);
 				if (activated) {
 					document.addEventListener("keydown", toggleInUseKeydownListener);
+					listenMedias($$("video, audio"));
 				} else {
 					setInUse(false);
 				}
@@ -410,9 +411,9 @@
 			}
 		}
 
-		function listenMedias(medias) {
+		function listenMedias(medias=[]) {
 			if (currentMedia == null) {
-				currentMedia = medias?.[0];
+				currentMedia = medias.find((media) => !media.paused);
 			}
 			for (const media of medias) {
 				media.addEventListener("play", () => currentMedia = media);
@@ -434,10 +435,12 @@
 		function setInUse(value) {
 			inUse = value;
 			if (!inUse) {
+				mediaAppendObserver.stopObservation();
 				document.removeEventListener("keydown", keydownListener);
 				document.removeEventListener("keydown", gotoTimeListener);
 				document.removeEventListener("keydown", showControlsListener);
 			} else {
+				mediaAppendObserver.beginObservation();
 				document.addEventListener("keydown", keydownListener);
 				document.addEventListener("keydown", gotoTimeListener);
 				document.addEventListener("keydown", showControlsListener);
