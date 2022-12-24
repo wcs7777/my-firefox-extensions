@@ -70,7 +70,7 @@ export function textNode(data) {
 	return document.createTextNode(data);
 }
 
-export function replaceSubstringAt(str, index, replacement) {
+export function replaceSubstringAt(str, replacement, index) {
 	return (
 		str.substring(0, index) +
 		replacement +

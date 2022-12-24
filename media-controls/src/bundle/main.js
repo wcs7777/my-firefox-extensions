@@ -44,7 +44,7 @@
 		return element;
 	}
 
-	function replaceSubstringAt(str, index, replacement) {
+	function replaceSubstringAt(str, replacement, index) {
 		return (
 			str.substring(0, index) +
 			replacement +
@@ -154,6 +154,68 @@
 		return typeof value === "object" ? value : { [value]: value };
 	}
 
+	async function doAction({
+		media,
+		action,
+		key,
+		timeRate,
+		speedRate,
+		minSpeed,
+		maxSpeed,
+		volumeRate,
+	}) {
+		return {
+			"begin": () => {
+				return media.currentTime = 0;
+			},
+			"end": () => {
+				return media.currentTime = media.duration;
+			},
+			"middle": () => {
+				return media.currentTime = media.duration * (parseInt(key) / 10);
+			},
+			"backward": () => {
+				return media.currentTime -= timeRate;
+			},
+			"forward": () => {
+				return media.currentTime += timeRate;
+			},
+			"togglePlay": () => {
+				return media.paused ? media.play() : media.pause();
+			},
+			"increaseSpeed": () => {
+				return increasePlaybackRate(speedRate);
+			},
+			"decreaseSpeed": () => {
+				return increasePlaybackRate(-speedRate);
+			},
+			"resetSpeed": () => {
+				return media.playbackRate = 1;
+			},
+			"increaseVolume": () => {
+				return increaseVolume(volumeRate);
+			},
+			"decreaseVolume": () => {
+				return increaseVolume(-volumeRate);
+			},
+			"toggleMute": () => {
+				return media.muted = !media.muted;
+			},
+		}[action]();
+
+		function increasePlaybackRate(rate) {
+			return media.playbackRate = threshold(
+				media.playbackRate + rate,
+				minSpeed,
+				maxSpeed,
+			);
+		}
+
+		function increaseVolume(rate) {
+			return media.volume = threshold(media.volume + rate, 0.00, 1.00);
+		}
+	}
+
 	function onlyTimeOnKeydown(separator, e) {
 		if (e === undefined) {
 			e = separator;
@@ -166,20 +228,27 @@
 			true
 		) {
 			e.preventDefault();
+		} else if (e.ctrlKey) {
+			return;
 		}
-		if (!e.ctrlKey) {
-			const index = getInputCursorIndex(e.target);
-			if (isDigit(e.key)) {
-				setInputDigitAt(e.target, e.key, index, separator);
-			} else if (e.key === e.target.value[index]) {
-				setInputCursorIndex(e.target, index + 1);
-			} else if (e.key === "Tab") {
-				setInputCursorIndex(
-					e.target,
-					index < 3 ? 3 :
-					index < 6 ? 6 : 0
-				);
-			}
+		const index = getInputCursorIndex(e.target);
+		if (isDigit(e.key)) {
+			setInputTimeDigitAt(e.target, e.key, index, separator);
+		} else if (e.key === e.target.value[index]) {
+			setInputCursorIndex(e.target, index + 1);
+		} else if (e.key === "Tab") {
+			setInputCursorIndex(
+				e.target,
+				index < 3 ? 3 :
+				index < 6 ? 6 : 0
+			);
+		} else if (e.key === "Backspace" && index > 0) {
+			const previous = index - 1;
+			resetInputTimeValueAt(e.target, previous, separator);
+			setInputCursorIndex(e.target, previous);
+		} else if (e.key === "Delete" && index < e.target.value.length) {
+			resetInputTimeValueAt(e.target, index, separator);
+			setInputCursorIndex(e.target, index);
 		}
 	}
 
@@ -199,12 +268,24 @@
 			if (getInputCursorIndex(e.target) === lastDigitIndex) {
 				break;
 			}
-			setInputDigitAt(e.target, digit, index, separator,);
+			setInputTimeDigitAt(e.target, digit, index, separator,);
 		}
 	}
 
 	function onCut(e) {
 		e.preventDefault();
+	}
+
+	function setInputTimeDigitAt(input, digit, index, separator) {
+		const skipped = skipSeparator(input.value, index, separator);
+		replaceInputValueAt(input, digit, skipped);
+		setInputCursorIndex(input, skipped + 1);
+	}
+
+	function resetInputTimeValueAt(input, index, separator) {
+		if (input.value[index] !== separator) {
+			replaceInputValueAt(input, "0", index);
+		}
 	}
 
 	function skipSeparator(value, index, separator) {
@@ -227,14 +308,30 @@
 		input.setSelectionRange(index, index);
 	}
 
-	function setInputDigitAt(input, digit, index, separator) {
-		const skipped = skipSeparator(input.value, index, separator);
-		replaceInputValueAt(input, skipped, digit);
-		setInputCursorIndex(input, skipped + 1);
+	function replaceInputValueAt(input, replacement, index) {
+		input.value = replaceSubstringAt(input.value, replacement, index);
 	}
 
-	function replaceInputValueAt(input, index, replacement) {
-		input.value = replaceSubstringAt(input.value, index, replacement);
+	function createPopup(textNode) {
+		return tag({
+			tagName: "span",
+			textNode,
+			cssText: `
+			position: fixed;
+			top: 100px;
+			left: 80px;
+			padding: 2px;
+			color: rgb(255, 255, 255);
+			background-color: rgba(0, 0, 0, .8);
+			font: 25px/1.2 Arial, sens-serif;
+			z-index: 99999;
+		`,
+		});
+	}
+
+	function showPopup(popup, timeout) {
+		document.body.appendChild(popup);
+		setTimeout(() => popup.remove(), timeout);
 	}
 
 	class Table {
@@ -371,16 +468,9 @@
 		];
 		let currentMedia = null;
 		let inUse = false;
-		console.log(`shortcut: ${shortcut}`);
-		console.log(`gotoShortcut: ${gotoShortcut}`);
-		console.log(`initialDelay: ${initialDelay}`);
-		console.log(`timeRate: ${timeRate}`);
-		console.log(`timeCtrlRate: ${timeCtrlRate}`);
-		console.log(`speedRate: ${speedRate}`);
-		console.log(`speedCtrlRate: ${speedCtrlRate}`);
-		console.log("delay begin");
+		console.log("media controls delay begin");
 		await sleep(initialDelay);
-		console.log("delay end");
+		console.log("media controls delay end");
 		listenMedias($$("video, audio"));
 		const mediaAppendObserver = onAppend({
 			selectors: "video, audio",
@@ -392,64 +482,36 @@
 			browser.runtime.onMessage.addListener(onMessage);
 		}
 
-		function onMessage({ activated }) {
-			if (activated !== undefined) {
-				document.removeEventListener("keydown", toggleInUseKeydownListener);
-				if (activated) {
-					document.addEventListener("keydown", toggleInUseKeydownListener);
-					listenMedias($$("video, audio"));
-				} else {
-					setInUse(false);
+		async function keydownListener(e) {
+			try {
+				if (validKey(e)) {
+					e.preventDefault();
+					const action = Object
+						.keys(controls)
+						.find((action) => controls[action].includes(e.key));
+					await doAction({
+						media: currentMedia,
+						action: action,
+						key: e.key,
+						timeRate: parseFloat(!e.ctrlKey ? timeRate : timeCtrlRate),
+						speedRate: parseFloat(!e.ctrlKey ? speedRate : speedCtrlRate),
+						minSpeed: 0.2,
+						maxSpeed: 5.0,
+						volumeRate: 0.05,
+					});
+					if (action.includes("Speed")) {
+						showPopup(
+							createPopup(currentMedia.playbackRate.toFixed(2)),
+							200,
+						);
+					}
+					if (action !== "togglePlay") {
+						await currentMedia.play();
+					}
 				}
+			} catch (error) {
+				console.error(error);
 			}
-		}
-
-		function toggleInUseKeydownListener(e) {
-			if (currentMedia && e.ctrlKey && e.key.toUpperCase() === shortcut) {
-				e.preventDefault();
-				setInUse(!inUse);
-			}
-		}
-
-		function listenMedias(medias=[]) {
-			if (currentMedia == null) {
-				currentMedia = medias.find((media) => !media.paused);
-			}
-			for (const media of medias) {
-				media.addEventListener("play", () => currentMedia = media);
-				onRemoved({
-					element: media,
-					options: { childList: true, subtree: true },
-					listener: () => {
-						if (currentMedia === media) {
-							currentMedia = null;
-							if (inUse) {
-								setInUse(false);
-							}
-						}
-					},
-				});
-			}
-		}
-
-		function setInUse(value) {
-			inUse = value;
-			if (!inUse) {
-				mediaAppendObserver.stopObservation();
-				document.removeEventListener("keydown", keydownListener);
-				document.removeEventListener("keydown", gotoTimeListener);
-				document.removeEventListener("keydown", showControlsListener);
-			} else {
-				mediaAppendObserver.beginObservation();
-				document.addEventListener("keydown", keydownListener);
-				document.addEventListener("keydown", gotoTimeListener);
-				document.addEventListener("keydown", showControlsListener);
-			}
-			const message = (
-				`media player control ${inUse ? "is" : "is not"} in use`
-			);
-			console.log(message);
-			showPopup(createPopup(message), 1200);
 		}
 
 		function gotoTimeListener(e) {
@@ -574,115 +636,65 @@
 			return isControlMediaKey(e) && validCtrlKey(e) && validKeyOnYoutube(e);
 		}
 
-		async function keydownListener(e) {
-			try {
-				if (validKey(e)) {
-					e.preventDefault();
-					const action = Object
-						.keys(controls)
-						.find((action) => controls[action].includes(e.key));
-					await doAction({
-						media: currentMedia,
-						action: action,
-						key: e.key,
-						timeRate: parseFloat(!e.ctrlKey ? timeRate : timeCtrlRate),
-						speedRate: parseFloat(!e.ctrlKey ? speedRate : speedCtrlRate),
-						minSpeed: 0.2,
-						maxSpeed: 5.0,
-						volumeRate: 0.05,
-					});
-					if (action.includes("Speed")) {
-						showPopup(
-							createPopup(currentMedia.playbackRate.toFixed(2)),
-							200,
-						);
-					}
-					if (action !== "togglePlay") {
-						await currentMedia.play();
-					}
+		function onMessage({ activated }) {
+			if (activated !== undefined) {
+				document.removeEventListener("keydown", toggleInUseKeydownListener);
+				if (activated) {
+					document.addEventListener("keydown", toggleInUseKeydownListener);
+					listenMedias($$("video, audio"));
+				} else {
+					setInUse(false);
 				}
-			} catch (error) {
-				console.error(error);
 			}
 		}
-	}
 
-	async function doAction({
-		media,
-		action,
-		key,
-		timeRate,
-		speedRate,
-		minSpeed,
-		maxSpeed,
-		volumeRate,
-	}) {
-		return {
-			"begin": () => {
-				return media.currentTime = 0;
-			},
-			"end": () => {
-				return media.currentTime = media.duration;
-			},
-			"middle": () => {
-				return media.currentTime = media.duration * (parseInt(key) / 10);
-			},
-			"backward": () => {
-				return media.currentTime -= timeRate;
-			},
-			"forward": () => {
-				return media.currentTime += timeRate;
-			},
-			"togglePlay": () => {
-				return media.paused ? media.play() : media.pause();
-			},
-			"increaseSpeed": () => {
-				return media.playbackRate = Math.min(
-					media.playbackRate + speedRate,
-					maxSpeed,
-				);
-			},
-			"decreaseSpeed": () => {
-				return media.playbackRate = Math.max(
-					media.playbackRate - speedRate,
-					minSpeed,
-				);
-			},
-			"resetSpeed": () => {
-				return media.playbackRate = 1;
-			},
-			"increaseVolume": () => {
-				return media.volume = Math.min(media.volume + volumeRate, 1.00);
-			},
-			"decreaseVolume": () => {
-				return media.volume = Math.max(media.volume - volumeRate, 0.00);
-			},
-			"toggleMute": () => {
-				return media.muted = !media.muted;
-			},
-		}[action]();
-	}
+		function toggleInUseKeydownListener(e) {
+			if (currentMedia && e.ctrlKey && e.key.toUpperCase() === shortcut) {
+				e.preventDefault();
+				setInUse(!inUse);
+			}
+		}
 
-	function createPopup(textNode) {
-		return tag({
-			tagName: "span",
-			textNode,
-			cssText: `
-			position: fixed;
-			top: 100px;
-			left: 80px;
-			padding: 2px;
-			color: rgb(255, 255, 255);
-			background-color: rgba(0, 0, 0, .8);
-			font: 25px/1.2 Arial, sens-serif;
-			z-index: 99999;
-		`,
-		});
-	}
+		function listenMedias(medias=[]) {
+			if (currentMedia == null) {
+				currentMedia = medias.find((media) => !media.paused);
+			}
+			for (const media of medias) {
+				media.addEventListener("play", () => currentMedia = media);
+				onRemoved({
+					element: media,
+					options: { childList: true, subtree: true },
+					listener: () => {
+						if (currentMedia === media) {
+							currentMedia = null;
+							if (inUse) {
+								setInUse(false);
+							}
+						}
+					},
+				});
+			}
+		}
 
-	function showPopup(popup, timeout) {
-		document.body.appendChild(popup);
-		setTimeout(() => popup.remove(), timeout);
+		function setInUse(value) {
+			inUse = value;
+			if (!inUse) {
+				mediaAppendObserver.stopObservation();
+				document.removeEventListener("keydown", keydownListener);
+				document.removeEventListener("keydown", gotoTimeListener);
+				document.removeEventListener("keydown", showControlsListener);
+			} else {
+				mediaAppendObserver.beginObservation();
+				document.addEventListener("keydown", keydownListener);
+				document.addEventListener("keydown", gotoTimeListener);
+				document.addEventListener("keydown", showControlsListener);
+			}
+			const message = (
+				`media player control ${inUse ? "is" : "is not"} in use`
+			);
+			console.log(message);
+			showPopup(createPopup(message), 1200);
+		}
 	}
 
 })();
