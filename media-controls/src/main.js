@@ -1,3 +1,4 @@
+import { onCut, onlyTimeOnKeydown, onlyTimeOnPaste } from "./input-time.js";
 import { controlsTable, optionsTable } from "./tables.js";
 import {
 	$$,
@@ -6,6 +7,7 @@ import {
 	onRemoved,
 	sleep,
 	tag,
+	threshold,
 } from "./utils.js";
 
 (async () => {
@@ -145,6 +147,7 @@ async function main() {
 
 	function gotoTimeListener(e) {
 		if (e.ctrlKey && e.key.toUpperCase() === gotoShortcut) {
+			const separator = ":";
 			e.preventDefault();
 			setInUse(false);
 			const input = tag({
@@ -163,38 +166,66 @@ async function main() {
 					font: 25px/1.2 Arial, sens-serif;
 					z-index: 99999;
 				`,
-				listeners: {
-					type: "keydown",
-					listener: (e) => {
-						if (e.key === "Enter") {
-							const [hours, minutes, seconds] = splitTime(e.target.value);
-							currentMedia.currentTime = Math.min(
-								currentMedia.duration,
-								hours * 3600 + minutes * 60 + seconds,
-							);
-							finalize();
-							return;
-						} else if (e.key === "Escape") {
-							finalize();
-							return;
-						}
-						const oldValue = e.target.value;
-						setTimeout(() => {
-							if (!isTimeValid(e.target.value)) {
-								e.target.value = oldValue;
-							}
-						}, 1);
-
-						function finalize() {
-							e.preventDefault();
-							e.target.remove();
-							setInUse(true);
-						}
+				attributes: [
+					{
+						name: "value",
+						value: `00${separator}00${separator}00`,
 					},
-				},
+				],
+				eventListeners: [
+					{
+						type: "keydown",
+						listener: onEnter,
+					},
+					{
+						type: "keydown",
+						listener: onEscape,
+					},
+					{
+						type: "keydown",
+						listener: onlyTimeOnKeydown.bind(null, separator),
+					},
+					{
+						type: "paste",
+						listener: onlyTimeOnPaste.bind(null, separator),
+					},
+					{
+						type: "cut",
+						listener: onCut,
+					},
+				],
 			});
 			document.body.appendChild(input);
 			input.focus();
+
+			async function onEnter(e) {
+				if (e.key === "Enter") {
+					const [hours, minutes, seconds] = [
+						parseInt(e.target.value.substring(0, 2)),
+						parseInt(e.target.value.substring(3, 5)),
+						parseInt(e.target.value.substring(6, 8)),
+					];
+					currentMedia.currentTime = threshold(
+						hours * 3600 + minutes * 60 + seconds,
+						0,
+						currentMedia.duration,
+					);
+					await currentMedia.play();
+					finalize(e);
+				}
+			}
+
+			function onEscape(e) {
+				if (e.key === "Escape") {
+					finalize(e);
+				}
+			}
+
+			function finalize(e) {
+				e.preventDefault();
+				e.target.remove();
+				setInUse(true);
+			}
 		}
 	}
 
@@ -345,44 +376,4 @@ function createPopup(textNode) {
 function showPopup(popup, timeout) {
 	document.body.appendChild(popup);
 	setTimeout(() => popup.remove(), timeout);
-}
-
-function isTimeValid(time, separator=":", maxSeparators=2) {
-	let separators = 0;
-	let digits = 0;
-	for (let i = 0; i < time.length; ++i) {
-		if (isNumber(time[i])) {
-			++digits;
-			if (digits > 2) {
-				return false;
-			}
-		} else if (time[i] === separator && i > 0 && isNumber(time[i - 1])) {
-			digits = 0;
-			++separators;
-			if (separators > maxSeparators) {
-				return false;
-			}
-		} else {
-			return false;
-		}
-	}
-	return true;
-}
-
-function splitTime(time, maxSeparators=2) {
-	const parts = [];
-	let part = "";
-	for (let i = 0; i < time.length; i++) {
-		if (isNumber(time[i])) {
-			part += time[i];
-		} else {
-			parts.push(parseInt(part));
-			part = "";
-		}
-	}
-	parts.push(parseInt(part));
-	for (let i = parts.length; i <= maxSeparators; ++i) {
-		parts.unshift(0);
-	}
-	return parts;
 }

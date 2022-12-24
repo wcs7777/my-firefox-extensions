@@ -10,7 +10,7 @@
 		id,
 		className,
 		attributes,
-		listeners,
+		eventListeners,
 		cssText,
 		textNode,
 		children,
@@ -27,8 +27,8 @@
 				element.setAttribute(name, value);
 			}
 		}
-		if (listeners) {
-			for (const { type, listener } of toArray(listeners)) {
+		if (eventListeners) {
+			for (const { type, listener } of toArray(eventListeners)) {
 				element.addEventListener(type, listener);
 			}
 		}
@@ -42,6 +42,23 @@
 			appendChildren(element, children);
 		}
 		return element;
+	}
+
+	function replaceSubstringAt(str, index, replacement) {
+		return (
+			str.substring(0, index) +
+			replacement +
+			str.substring(index + replacement.length) +
+			""
+		);
+	}
+
+	function threshold(value, min, max) {
+		return Math.max(Math.min(value, max), min);
+	}
+
+	function isDigit(value) {
+		return value.toString().length === 1 && "0123456789".includes(value);
 	}
 
 	function mutationObserverWrapper({
@@ -125,14 +142,6 @@
 		});
 	}
 
-	function numbers() {
-		return "0123456789";
-	}
-
-	function isNumber(character) {
-		return numbers().indexOf(character) > -1;
-	}
-
 	function isString(value) {
 	  return Object.prototype.toString.call(value) === "[object String]"
 	}
@@ -143,6 +152,89 @@
 
 	function toObject(value) {
 		return typeof value === "object" ? value : { [value]: value };
+	}
+
+	function onlyTimeOnKeydown(separator, e) {
+		if (e === undefined) {
+			e = separator;
+			separator = ":";
+		}
+		if (
+			!e.key.startsWith("Arrow") &&
+			!["Home", "End"].includes(e.key) &&
+			!e.ctrlKey &&
+			true
+		) {
+			e.preventDefault();
+		}
+		if (!e.ctrlKey) {
+			const index = getInputCursorIndex(e.target);
+			if (isDigit(e.key)) {
+				setInputDigitAt(e.target, e.key, index, separator);
+			} else if (e.key === e.target.value[index]) {
+				setInputCursorIndex(e.target, index + 1);
+			} else if (e.key === "Tab") {
+				setInputCursorIndex(
+					e.target,
+					index < 3 ? 3 :
+					index < 6 ? 6 : 0
+				);
+			}
+		}
+	}
+
+	function onlyTimeOnPaste(separator, e) {
+		if (e === undefined) {
+			e = separator;
+			separator = ":";
+		}
+		e.preventDefault();
+		const digits = e.clipboardData
+			.getData("text")
+			.replace(/[^\d]/g, "")
+			.split("");
+		const lastDigitIndex = e.target.value.length;
+		for (const digit of digits) {
+			const index = getInputCursorIndex(e.target);
+			if (getInputCursorIndex(e.target) === lastDigitIndex) {
+				break;
+			}
+			setInputDigitAt(e.target, digit, index, separator,);
+		}
+	}
+
+	function onCut(e) {
+		e.preventDefault();
+	}
+
+	function skipSeparator(value, index, separator) {
+		return (
+			value[index] !== separator ?
+			threshold(index, 0, value.length - 1) :
+			index + 1
+		);
+	}
+
+	function getInputCursorIndex(input) {
+		return (
+			input.selectionDirection !== "backward" ?
+			input.selectionStart :
+			input.selectionEnd
+		);
+	}
+
+	function setInputCursorIndex(input, index) {
+		input.setSelectionRange(index, index);
+	}
+
+	function setInputDigitAt(input, digit, index, separator) {
+		const skipped = skipSeparator(input.value, index, separator);
+		replaceInputValueAt(input, skipped, digit);
+		setInputCursorIndex(input, skipped + 1);
+	}
+
+	function replaceInputValueAt(input, index, replacement) {
+		input.value = replaceSubstringAt(input.value, index, replacement);
 	}
 
 	class Table {
@@ -359,6 +451,7 @@
 
 		function gotoTimeListener(e) {
 			if (e.ctrlKey && e.key.toUpperCase() === gotoShortcut) {
+				const separator = ":";
 				e.preventDefault();
 				setInUse(false);
 				const input = tag({
@@ -377,38 +470,66 @@
 					font: 25px/1.2 Arial, sens-serif;
 					z-index: 99999;
 				`,
-					listeners: {
-						type: "keydown",
-						listener: (e) => {
-							if (e.key === "Enter") {
-								const [hours, minutes, seconds] = splitTime(e.target.value);
-								currentMedia.currentTime = Math.min(
-									currentMedia.duration,
-									hours * 3600 + minutes * 60 + seconds,
-								);
-								finalize();
-								return;
-							} else if (e.key === "Escape") {
-								finalize();
-								return;
-							}
-							const oldValue = e.target.value;
-							setTimeout(() => {
-								if (!isTimeValid(e.target.value)) {
-									e.target.value = oldValue;
-								}
-							}, 1);
-
-							function finalize() {
-								e.preventDefault();
-								e.target.remove();
-								setInUse(true);
-							}
+					attributes: [
+						{
+							name: "value",
+							value: `00${separator}00${separator}00`,
 						},
-					},
+					],
+					eventListeners: [
+						{
+							type: "keydown",
+							listener: onEnter,
+						},
+						{
+							type: "keydown",
+							listener: onEscape,
+						},
+						{
+							type: "keydown",
+							listener: onlyTimeOnKeydown.bind(null, separator),
+						},
+						{
+							type: "paste",
+							listener: onlyTimeOnPaste.bind(null, separator),
+						},
+						{
+							type: "cut",
+							listener: onCut,
+						},
+					],
 				});
 				document.body.appendChild(input);
 				input.focus();
+
+				async function onEnter(e) {
+					if (e.key === "Enter") {
+						const [hours, minutes, seconds] = [
+							parseInt(e.target.value.substring(0, 2)),
+							parseInt(e.target.value.substring(3, 5)),
+							parseInt(e.target.value.substring(6, 8)),
+						];
+						currentMedia.currentTime = threshold(
+							hours * 3600 + minutes * 60 + seconds,
+							0,
+							currentMedia.duration,
+						);
+						await currentMedia.play();
+						finalize(e);
+					}
+				}
+
+				function onEscape(e) {
+					if (e.key === "Escape") {
+						finalize(e);
+					}
+				}
+
+				function finalize(e) {
+					e.preventDefault();
+					e.target.remove();
+					setInUse(true);
+				}
 			}
 		}
 
@@ -559,46 +680,6 @@
 	function showPopup(popup, timeout) {
 		document.body.appendChild(popup);
 		setTimeout(() => popup.remove(), timeout);
-	}
-
-	function isTimeValid(time, separator=":", maxSeparators=2) {
-		let separators = 0;
-		let digits = 0;
-		for (let i = 0; i < time.length; ++i) {
-			if (isNumber(time[i])) {
-				++digits;
-				if (digits > 2) {
-					return false;
-				}
-			} else if (time[i] === separator && i > 0 && isNumber(time[i - 1])) {
-				digits = 0;
-				++separators;
-				if (separators > maxSeparators) {
-					return false;
-				}
-			} else {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	function splitTime(time, maxSeparators=2) {
-		const parts = [];
-		let part = "";
-		for (let i = 0; i < time.length; i++) {
-			if (isNumber(time[i])) {
-				part += time[i];
-			} else {
-				parts.push(parseInt(part));
-				part = "";
-			}
-		}
-		parts.push(parseInt(part));
-		for (let i = parts.length; i <= maxSeparators; ++i) {
-			parts.unshift(0);
-		}
-		return parts;
 	}
 
 })();

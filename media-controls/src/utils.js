@@ -32,7 +32,7 @@ export function tag({
 	id,
 	className,
 	attributes,
-	listeners,
+	eventListeners,
 	cssText,
 	textNode,
 	children,
@@ -49,8 +49,8 @@ export function tag({
 			element.setAttribute(name, value);
 		}
 	}
-	if (listeners) {
-		for (const { type, listener } of toArray(listeners)) {
+	if (eventListeners) {
+		for (const { type, listener } of toArray(eventListeners)) {
 			element.addEventListener(type, listener);
 		}
 	}
@@ -68,6 +68,23 @@ export function tag({
 
 export function textNode(data) {
 	return document.createTextNode(data);
+}
+
+export function replaceSubstringAt(str, index, replacement) {
+	return (
+		str.substring(0, index) +
+		replacement +
+		str.substring(index + replacement.length) +
+		""
+	);
+}
+
+export function threshold(value, min, max) {
+	return Math.max(Math.min(value, max), min);
+}
+
+export function isDigit(value) {
+	return value.toString().length === 1 && "0123456789".includes(value);
 }
 
 export function object2blob(obj) {
