@@ -257,7 +257,7 @@ async function main() {
 
 	function listenMedias(medias=[]) {
 		if (currentMedia == null) {
-			currentMedia = medias.find((media) => !media.paused);
+			currentMedia = medias.find((media) => !media.paused) || medias[0];
 		}
 		for (const media of medias) {
 			media.addEventListener("play", () => currentMedia = media);
