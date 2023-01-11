@@ -16,23 +16,32 @@ export function onlyTimeOnKeydown(separator, e) {
 		return;
 	}
 	const index = getInputCursorIndex(e.target);
+	const length = e.target.value.length;
 	if (isDigit(e.key)) {
 		setInputTimeDigitAt(e.target, e.key, index, separator);
 	} else if (e.key === e.target.value[index]) {
 		setInputCursorIndex(e.target, index + 1);
-	} else if (e.key === "Tab") {
-		setInputCursorIndex(
-			e.target,
-			index < 3 ? 3 :
-			index < 6 ? 6 : 0
-		);
 	} else if (e.key === "Backspace" && index > 0) {
 		const previous = index - 1;
 		resetInputTimeValueAt(e.target, previous, separator);
 		setInputCursorIndex(e.target, previous);
-	} else if (e.key === "Delete" && index < e.target.value.length) {
+	} else if (e.key === "Delete" && index < length) {
 		resetInputTimeValueAt(e.target, index, separator);
 		setInputCursorIndex(e.target, index);
+	} else if (["Tab", " ", "h", "l"].includes(e.key)) {
+		let newIndex = index;
+		if (e.key === "Tab") {
+			if (!e.shiftKey) {
+				newIndex = index < 3 ? 3 : index < 6 ? 6 : 0;
+			} else {
+				newIndex = index < 3 ? 6 : index < 6 ? 0 : 3;
+			}
+		} else if (!e.shiftKey && [" ", "l"].includes(e.key)) {
+			newIndex = (index + 1) % length;
+		} else if (e.key === "h" || (e.shiftKey && e.key === " ")) {
+			newIndex = index - 1 >= 0 ? index - 1 : length - 1;
+		}
+		setInputCursorIndex(e.target, newIndex);
 	}
 }
 
@@ -94,4 +103,12 @@ function setInputCursorIndex(input, index) {
 
 function replaceInputValueAt(input, replacement, index) {
 	input.value = replaceSubstringAt(input.value, replacement, index);
+}
+
+function moveForward(index, length) {
+	return (index + 1) % length;
+}
+
+function moveBackward(index, length) {
+	return index - 1 >= 0 ? index - 1 : length - 1;
 }
