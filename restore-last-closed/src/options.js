@@ -1,5 +1,5 @@
 import { optionsTable } from "./tables.js";
-import { $, isLetter, toArray } from "./utils.js";
+import { $, toArray } from "./utils.js";
 
 document.addEventListener("DOMContentLoaded", setFieldValues);
 
@@ -18,32 +18,6 @@ element("setOptions").addEventListener("submit", async (e) => {
 		console.error(error);
 	}
 });
-
-element("shortcut").addEventListener("keydown", (e) => {
-	if (!isNavigationKey(e)) {
-		e.preventDefault();
-		if (isLetter(e.key)) {
-			e.target.value = e.key.toUpperCase();
-		}
-	}
-});
-
-function isNavigationKey(keydownEvent) {
-	return keydownEvent.ctrlKey || [
-		"Backspace",
-		"Delete",
-		"ArrowUp",
-		"ArrowRight",
-		"ArrowDown",
-		"ArrowLeft",
-		"Tab",
-		"CapsLock",
-		"Home",
-		"End",
-		"Enter",
-	]
-		.includes(keydownEvent.key);
-}
 
 async function setFieldValues() {
 	try {
