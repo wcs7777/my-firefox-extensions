@@ -675,8 +675,8 @@
 					options: { childList: true, subtree: true },
 					listener: () => {
 						if (currentMedia === media) {
-							currentMedia = $$("video, audio").find((media) => !media.paused);
-							if (inUse) {
+							currentMedia = $$("video, audio").find((m) => !m.paused);
+							if (inUse && currentMedia === undefined) {
 								setInUse(false);
 							}
 						}
