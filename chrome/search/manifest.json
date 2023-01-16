@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Search",
+  "version": "1.0.0",
+  "description": "Context Menu for search selected text in defined websites",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+   "background": {
+    "service_worker": "src/bundle/main.js"
+  },
+  "options_ui": {
+    "page": "src/options.html"
+  },
+  "permissions": [
+    "contextMenus",
+    "storage"
+  ]
+}

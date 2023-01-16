@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="options.css">
+</head>
+<body>
+	<form id="setOptions">
+		<label for="shortcut">Shortcut (Ctrl+?)</label>
+		<input type="text" id="shortcut" required>
+		<label for="gotoShortcut">Go To Time Shortcut (Ctrl+?)</label>
+		<input type="text" id="gotoShortcut" required>
+		<label for="showControlsShortcut">Show Controls Shortcut (Ctrl+?)</label>
+		<input type="text" id="showControlsShortcut" required>
+		<label for="initialDelay">Initial Delay</label>
+		<input type="text" id="initialDelay" pattern="\d+" required>
+		<label for="timeRate">Time Rate</label>
+		<input type="text" id="timeRate" pattern="\d*\.?\d+" required>
+		<label for="timeCtrlRate">Time Ctrl Rate</label>
+		<input type="text" id="timeCtrlRate" pattern="\d*\.?\d+" required>
+		<label for="speedRate">Speed Rate</label>
+		<input type="text" id="speedRate" pattern="\d*\.?\d+" required>
+		<label for="speedCtrlRate">Speed Ctrl Rate</label>
+		<input type="text" id="speedCtrlRate"pattern="\d*\.?\d+"  required>
+		<label for="activated">Activated?</label>
+		<select id="activated">
+			<option value="true" selected>True</option>
+			<option value="false">False</option>
+		</select>
+		<button type="submit">Set</button>
+	</form>
+	<hr>
+	<button id="downloadControlsTable">Download Controls Table</button>
+	<hr>
+	<form id="updateControlsTable">
+		<label for="controlsTable">Controls Table</label>
+		<input type="file" accept="application/JSON" id="controlsTable">
+		<button type="submit">Update Controls Table</button>
+	</form>
+	<script type="module" src="options.js"></script>
+</body>
+</html>

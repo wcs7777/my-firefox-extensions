@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="options.css">
+</head>
+<body>
+	<form id="setLogin">
+		<label for="domain">Domain</label>
+		<select id="domain">
+		</select>
+		<label for="shortcut">Shortcut</label>
+		<select id="shortcut">
+		</select>
+		<label for="User">User</label>
+		<input type="text" id="user" required>
+		<label for="password">Password</label>
+		<input type="text" id="password" required>
+		<button type="submit">Set Login</button>
+	</form>
+	<hr />
+	<form id="removeLogin">
+		<label for="removeDomain">Domain</label>
+		<select id="removeDomain">
+		</select>
+		<label for="removeShortcut">Shortcut</label>
+		<select id="removeShortcut">
+		</select>
+		<button type="submit">Remove Login</button>
+	</form>
+	<hr />
+	<form id="setLoginsWithBundle">
+		<label for="bundleLogins">Bundle Logins</label>
+		<textarea id="bundleLogins" cols="30" rows="10"></textarea>
+		<button type="submit">Set Logins</button>
+	</form>
+	<hr />
+	<form id="showUsers">
+		<select id="showUsersDomain">
+		</select>
+	</form>
+	<script type="module" src="options.js"></script>
+</body>
+</html>

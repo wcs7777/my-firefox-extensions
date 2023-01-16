@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "My Search",
+  "version": "1.0.0",
+  "description": "To use, type ']'",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "omnibox": {
+    "keyword": "]"
+  },
+   "background": {
+    "service_worker": "src/bundle/main.js"
+  },
+  "options_ui": {
+    "page": "src/options.html"
+  },
+  "permissions": [
+    "storage"
+  ]
+}

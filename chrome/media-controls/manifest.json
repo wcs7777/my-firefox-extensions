@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Media Player Controls",
+  "version": "1.0.0",
+  "description": "Control medias (audio and videos) with shortcuts",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/bundle/main.js"
+      ]
+    }
+  ],
+  "options_ui": {
+    "page": "src/options.html"
+  },
+   "background": {
+    "service_worker": "src/bundle/background.js"
+  },
+   "action": {
+    "default_icon": {
+      "19": "icons/icon-19.png",
+      "38": "icons/icon-38.png"
+    },
+    "default_title": "Media Controls"
+  },
+  "permissions": [
+    "storage",
+    "downloads",
+    "tabs"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "manifest_version": 3,
+  "name": "Login",
+  "version": "1.0.0",
+  "description": "Login automation",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://forvo.com/login/"
+      ],
+      "js": [
+        "src/bundle/forvo.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://accounts.google.com/v3/signin/*",
+        "https://accounts.google.com/ServiceLogin/*"
+      ],
+      "js": [
+        "src/bundle/gmail.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://login.microsoftonline.com/*",
+        "https://login.live.com/*"
+      ],
+      "js": [
+        "src/bundle/microsoft.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://github.com/login*"
+      ],
+      "js": [
+        "src/bundle/github.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://siga.cps.sp.gov.br/aluno/login.aspx"
+      ],
+      "js": [
+        "src/bundle/siga.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://br.linkedin.com/"
+      ],
+      "js": [
+        "src/bundle/linkedin.js"
+      ]
+    }
+  ],
+  "options_ui": {
+    "page": "src/options.html"
+  },
+   "background": {
+    "service_worker": "src/bundle/background.js"
+  },
+  "permissions": [
+    "storage"
+  ]
+}
