@@ -3,7 +3,7 @@ export default function populateOptions(table) {
 		shortcut: ";",
 		gotoShortcut: "G",
 		showControlsShortcut: "L",
-		initialDelay: 2000,
+		initialDelay: 500,
 		timeRate: 5.00,
 		timeCtrlRate: 2.50,
 		speedRate: 0.25,

@@ -288,3 +288,18 @@ export function toArray(value) {
 export function toObject(value) {
 	return typeof value === "object" ? value : { [value]: value };
 }
+
+export function formatSeconds(seconds, separator=":") {
+	return [
+		parseInt(seconds / 3600),
+		parseInt(seconds % 3600 / 60),
+		seconds % 60,
+	]
+		.map((value) => parseInt(value))
+		.map((value) => padZero(value))
+		.join(separator);
+}
+
+export function padZero(value) {
+	return value.toString().padStart(2, "0");
+}

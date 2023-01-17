@@ -154,6 +154,21 @@
 		return typeof value === "object" ? value : { [value]: value };
 	}
 
+	function formatSeconds(seconds, separator=":") {
+		return [
+			parseInt(seconds / 3600),
+			parseInt(seconds % 3600 / 60),
+			seconds % 60,
+		]
+			.map((value) => parseInt(value))
+			.map((value) => padZero(value))
+			.join(separator);
+	}
+
+	function padZero(value) {
+		return value.toString().padStart(2, "0");
+	}
+
 	async function doAction({
 		media,
 		action,
@@ -216,11 +231,7 @@
 		}
 	}
 
-	function onlyTimeOnKeydown(separator, e) {
-		if (e === undefined) {
-			e = separator;
-			separator = ":";
-		}
+	function onlyTimeOnKeydown(separator, media, e) {
 		if (
 			!e.key.startsWith("Arrow") &&
 			!["Home", "End"].includes(e.key) &&
@@ -229,6 +240,14 @@
 		) {
 			e.preventDefault();
 		} else if (e.ctrlKey) {
+			if (e.key.toUpperCase() === 'S') {
+				e.preventDefault();
+				e.target.value = formatSeconds(parseInt(media.currentTime));
+				setInputCursorIndex(
+					e.target,
+					threshold(e.target.value.search(/[^0|^:]/), 0, e.target.value.length),
+				);
+			}
 			return;
 		}
 		const index = getInputCursorIndex(e.target);
@@ -480,7 +499,7 @@
 		console.log("media controls delay begin");
 		await sleep(initialDelay);
 		console.log("media controls delay end");
-		listenMedias($$("video, audio"));
+		listenMedias(getMedias());
 		const mediaAppendObserver = onAppend({
 			selectors: "video, audio",
 			options: { childList: true, subtree: true },
@@ -561,7 +580,7 @@
 						},
 						{
 							type: "keydown",
-							listener: onlyTimeOnKeydown.bind(null, separator),
+							listener: onlyTimeOnKeydown.bind(null, separator, currentMedia),
 						},
 						{
 							type: "paste",
@@ -650,7 +669,7 @@
 				document.removeEventListener("keydown", toggleInUseKeydownListener);
 				if (activated) {
 					document.addEventListener("keydown", toggleInUseKeydownListener);
-					listenMedias($$("video, audio"));
+					listenMedias(getMedias());
 				} else {
 					setInUse(false);
 				}
@@ -666,7 +685,7 @@
 
 		function listenMedias(medias=[]) {
 			if (currentMedia == null) {
-				currentMedia = medias.find((media) => !media.paused) || medias[0];
+				currentMedia = getPlayingMedia(medias) || medias[0];
 			}
 			for (const media of medias) {
 				media.addEventListener("play", () => currentMedia = media);
@@ -675,7 +694,7 @@
 					options: { childList: true, subtree: true },
 					listener: () => {
 						if (currentMedia === media) {
-							currentMedia = $$("video, audio").find((m) => !m.paused);
+							currentMedia = getPlayingMedia();
 							if (inUse && currentMedia === undefined) {
 								setInUse(false);
 							}
@@ -704,6 +723,14 @@
 			console.log(message);
 			showPopup(createPopup(message), 1200);
 		}
+	}
+
+	function getMedias() {
+		return $$("video, audio");
+	}
+
+	function getPlayingMedia(medias=getMedias()) {
+		return medias.find((media) => !media.paused);
 	}
 
 })();

@@ -71,7 +71,7 @@ async function main() {
 	console.log("media controls delay begin");
 	await sleep(initialDelay);
 	console.log("media controls delay end");
-	listenMedias($$("video, audio"));
+	listenMedias(getMedias());
 	const mediaAppendObserver = onAppend({
 		selectors: "video, audio",
 		options: { childList: true, subtree: true },
@@ -152,7 +152,7 @@ async function main() {
 					},
 					{
 						type: "keydown",
-						listener: onlyTimeOnKeydown.bind(null, separator),
+						listener: onlyTimeOnKeydown.bind(null, separator, currentMedia),
 					},
 					{
 						type: "paste",
@@ -241,7 +241,7 @@ async function main() {
 			document.removeEventListener("keydown", toggleInUseKeydownListener);
 			if (activated) {
 				document.addEventListener("keydown", toggleInUseKeydownListener);
-				listenMedias($$("video, audio"));
+				listenMedias(getMedias());
 			} else {
 				setInUse(false);
 			}
@@ -257,7 +257,7 @@ async function main() {
 
 	function listenMedias(medias=[]) {
 		if (currentMedia == null) {
-			currentMedia = medias.find((media) => !media.paused) || medias[0];
+			currentMedia = getPlayingMedia(medias) || medias[0];
 		}
 		for (const media of medias) {
 			media.addEventListener("play", () => currentMedia = media);
@@ -266,7 +266,7 @@ async function main() {
 				options: { childList: true, subtree: true },
 				listener: () => {
 					if (currentMedia === media) {
-						currentMedia = $$("video, audio").find((m) => !m.paused);
+						currentMedia = getPlayingMedia();
 						if (inUse && currentMedia === undefined) {
 							setInUse(false);
 						}
@@ -295,4 +295,12 @@ async function main() {
 		console.log(message);
 		showPopup(createPopup(message), 1200);
 	}
+}
+
+function getMedias() {
+	return $$("video, audio");
+}
+
+function getPlayingMedia(medias=getMedias()) {
+	return medias.find((media) => !media.paused);
 }

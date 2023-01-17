@@ -1,10 +1,11 @@
-import { isDigit, replaceSubstringAt, threshold } from "./utils";
+import {
+	formatSeconds,
+	isDigit,
+	replaceSubstringAt,
+	threshold,
+} from "./utils";
 
-export function onlyTimeOnKeydown(separator, e) {
-	if (e === undefined) {
-		e = separator;
-		separator = ":";
-	}
+export function onlyTimeOnKeydown(separator, media, e) {
 	if (
 		!e.key.startsWith("Arrow") &&
 		!["Home", "End"].includes(e.key) &&
@@ -13,6 +14,14 @@ export function onlyTimeOnKeydown(separator, e) {
 	) {
 		e.preventDefault();
 	} else if (e.ctrlKey) {
+		if (e.key.toUpperCase() === 'S') {
+			e.preventDefault();
+			e.target.value = formatSeconds(parseInt(media.currentTime));
+			setInputCursorIndex(
+				e.target,
+				threshold(e.target.value.search(/[^0|^:]/), 0, e.target.value.length),
+			);
+		}
 		return;
 	}
 	const index = getInputCursorIndex(e.target);
