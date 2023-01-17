@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Media Player Controls",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "description": "Control medias (audio and videos) with shortcuts",
   "icons": {
     "48": "icons/icon.png"

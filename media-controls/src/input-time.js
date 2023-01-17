@@ -113,11 +113,3 @@ function setInputCursorIndex(input, index) {
 function replaceInputValueAt(input, replacement, index) {
 	input.value = replaceSubstringAt(input.value, replacement, index);
 }
-
-function moveForward(index, length) {
-	return (index + 1) % length;
-}
-
-function moveBackward(index, length) {
-	return index - 1 >= 0 ? index - 1 : length - 1;
-}
