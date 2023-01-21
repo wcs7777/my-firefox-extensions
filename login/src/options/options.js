@@ -72,18 +72,7 @@ byId("downloadStructure").addEventListener("click", async (e) => {
 	try {
 		e.preventDefault();
 		await downloadObject(
-			Object
-				.entries(await optionsTable.getAll())
-				.map(([location, logins]) => {
-					return {
-						[location]: logins.map((login) => {
-							return {
-								user: login.user,
-								password: 'hidden',
-							};
-						}),
-					};
-				}),
+			hidePasswords(await optionsTable.getAll()),
 			"login-structure.json",
 		);
 	} catch (error) {
@@ -125,4 +114,25 @@ function extractFieldValue(idField) {
 	const value = field.value.trim();
 	field.value = "";
 	return value;
+}
+
+function hidePasswords(options) {
+	return Object
+		.entries(options)
+		.map(([location, logins]) => {
+			return {
+				[location]: logins.map((login) => {
+					return {
+						user: login.user,
+						password: 'hidden',
+					};
+				}),
+			};
+		})
+		.reduce((options, location) => {
+			return {
+				...options,
+				[Object.keys(location)[0]]: Object.values(location)[0],
+			};
+		}, {});
 }
