@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Login",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Login automation",
   "icons": {
     "48": "icons/icon.png"
