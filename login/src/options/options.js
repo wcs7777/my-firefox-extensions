@@ -1,10 +1,11 @@
 import { optionsTable } from "../storage/tables.js";
-import { 
-	appendChildren, 
-	byId, 
-	option, 
-	sequence, 
-	tag 
+import downloadObject from "../utils/download-object.js";
+import {
+	appendChildren,
+	byId,
+	option,
+	sequence,
+	tag
 } from "../utils/utils.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -62,6 +63,29 @@ byId("setLoginsWithBundle").addEventListener("submit", async (e) => {
 		e.preventDefault();
 		const bundle = JSON.parse(extractFieldValue("bundleLogins"));
 		await optionsTable.set(bundle);
+	} catch (error) {
+		console.error(error);
+	}
+});
+
+byId("downloadStructure").addEventListener("click", async (e) => {
+	try {
+		e.preventDefault();
+		await downloadObject(
+			Object
+				.entries(await optionsTable.getAll())
+				.map(([location, logins]) => {
+					return {
+						[location]: logins.map((login) => {
+							return {
+								user: login.user,
+								password: 'hidden',
+							};
+						}),
+					};
+				}),
+			"login-structure.json",
+		);
 	} catch (error) {
 		console.error(error);
 	}

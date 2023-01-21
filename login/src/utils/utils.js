@@ -103,6 +103,13 @@ export function toObject(value) {
 	return typeof value === "object" ? value : { [value]: value };
 }
 
+export function object2blob(obj) {
+	return new Blob(
+		[JSON.stringify(obj, null, 2)],
+		{ type: "application/json" },
+	);
+}
+
 export function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
