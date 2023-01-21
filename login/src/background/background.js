@@ -1,5 +1,5 @@
 import populateOptions from "./populate-options.js";
-import { utilsTable, optionsTable } from "./tables.js";
+import { utilsTable, optionsTable } from "../storage/tables.js";
 
 (async () => {
 	await populate(optionsTable, populateOptions);

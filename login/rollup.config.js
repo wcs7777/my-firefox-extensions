@@ -1,19 +1,23 @@
-const configs = createConfigs([
-	"forvo",
-	"gmail",
-	"microsoft",
-	"github",
-	"siga",
-	"linkedin",
-	"quora",
-]);
+const configs = createConfigs(
+	[
+		"forvo",
+		"gmail",
+		"microsoft",
+		"github",
+		"siga",
+		"linkedin",
+		"quora",
+	],
+	"src/locations",
+	"src/locations/bundle",
+);
 
-function createConfigs(files) {
+function createConfigs(files, source="src", dest="src/bundle") {
 	return files.map((file) => {
 		return {
-			input: `src/${file}.js`,
+			input: `${source}/${file}.js`,
 			output: {
-				file: `src/bundle/${file}.js`,
+				file: `${dest}/${file}.js`,
 				format: "iife",
 			},
 		};

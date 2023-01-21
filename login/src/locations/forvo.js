@@ -1,6 +1,6 @@
-import { optionsTable } from "./tables.js";
-import { waitFormToSubmit, waitInputToSetValue } from "./utils.js";
-import listenLogin from "./listen-login.js";
+import { optionsTable } from "../storage/tables.js";
+import { waitFormToSubmit, waitInputToSetValue } from "../utils/utils.js";
+import listenLogin from "../utils/listen-login.js";
 
 (async () => {
 	const logins = await optionsTable.get("forvo");

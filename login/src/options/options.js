@@ -1,5 +1,11 @@
-import { optionsTable } from "./tables.js";
-import { appendChildren, byId, option, sequence, tag } from "./utils.js";
+import { optionsTable } from "../storage/tables.js";
+import { 
+	appendChildren, 
+	byId, 
+	option, 
+	sequence, 
+	tag 
+} from "../utils/utils.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
 	try {

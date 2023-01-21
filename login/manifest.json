@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Login",
+  "name": "Loginn",
   "version": "1.0.5",
   "description": "Login automation",
   "icons": {
@@ -12,7 +12,7 @@
         "https://forvo.com/login/"
       ],
       "js": [
-        "src/bundle/forvo.js"
+        "src/locations/bundle/forvo.js"
       ]
     },
     {
@@ -21,7 +21,7 @@
         "https://accounts.google.com/ServiceLogin/*"
       ],
       "js": [
-        "src/bundle/gmail.js"
+        "src/locations/bundle/gmail.js"
       ]
     },
     {
@@ -30,7 +30,7 @@
         "https://login.live.com/*"
       ],
       "js": [
-        "src/bundle/microsoft.js"
+        "src/locations/bundle/microsoft.js"
       ]
     },
     {
@@ -38,7 +38,7 @@
         "https://github.com/login*"
       ],
       "js": [
-        "src/bundle/github.js"
+        "src/locations/bundle/github.js"
       ]
     },
     {
@@ -46,7 +46,7 @@
         "https://siga.cps.sp.gov.br/aluno/login.aspx"
       ],
       "js": [
-        "src/bundle/siga.js"
+        "src/locations/bundle/siga.js"
       ]
     },
     {
@@ -55,7 +55,7 @@
         "https://www.linkedin.com/"
       ],
       "js": [
-        "src/bundle/linkedin.js"
+        "src/locations/bundle/linkedin.js"
       ]
     },
     {
@@ -64,15 +64,15 @@
         "https://www.quora.com/"
       ],
       "js": [
-        "src/bundle/quora.js"
+        "src/locations/bundle/quora.js"
       ]
     }
   ],
   "options_ui": {
-    "page": "src/options.html"
+    "page": "src/options/options.html"
   },
   "background": {
-    "page": "src/background.html",
+    "page": "src/background/background.html",
     "persistent": true
   },
   "permissions": [
