@@ -4,6 +4,7 @@ import { createPopup, showPopup } from "./popup.js";
 import { controlsTable, optionsTable } from "./tables.js";
 import {
 	$$,
+	formatSeconds,
 	onAppend,
 	onRemoved,
 	sleep,
@@ -68,6 +69,7 @@ async function main() {
 	];
 	let currentMedia = null;
 	let inUse = false;
+	let savePoint = 0;
 	console.log("media controls delay begin");
 	await sleep(initialDelay);
 	console.log("media controls delay end");
@@ -208,6 +210,30 @@ async function main() {
 		}
 	}
 
+	function createSavePoint(e) {
+		if (e.ctrlKey && e.key.toUpperCase() === "P") {
+			e.preventDefault();
+			savePoint = currentMedia?.currentTime;
+			if (savePoint != null) {
+				showPopup(
+					createPopup(`Save Point Created: ${formatSeconds(savePoint)}`)
+				);
+			}
+		}
+	}
+
+	function restoreSavePoint(e) {
+		if (e.ctrlKey && e.key.toUpperCase() === "U") {
+			e.preventDefault();
+			if (savePoint != null) {
+				currentMedia.currentTime = savePoint;
+				showPopup(
+					createPopup(`Save Point Restored: ${formatSeconds(savePoint)}`)
+				);
+			}
+		}
+	}
+
 	function isControlMediaKey(e) {
 		return keys.includes(e.key);
 	}
@@ -283,17 +309,21 @@ async function main() {
 			document.removeEventListener("keydown", keydownListener);
 			document.removeEventListener("keydown", gotoTimeListener);
 			document.removeEventListener("keydown", showControlsListener);
+			document.removeEventListener("keydown", createSavePoint);
+			document.removeEventListener("keydown", restoreSavePoint);
 		} else {
 			mediaAppendObserver.beginObservation();
 			document.addEventListener("keydown", keydownListener);
 			document.addEventListener("keydown", gotoTimeListener);
 			document.addEventListener("keydown", showControlsListener);
+			document.addEventListener("keydown", createSavePoint);
+			document.addEventListener("keydown", restoreSavePoint);
 		}
 		const message = (
 			`media player control ${inUse ? "is" : "is not"} in use`
 		);
 		console.log(message);
-		showPopup(createPopup(message), 1200);
+		showPopup(createPopup(message));
 	}
 }
 

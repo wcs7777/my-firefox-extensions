@@ -17,7 +17,7 @@ export function createPopup(textNode) {
 	});
 }
 
-export function showPopup(popup, timeout) {
+export function showPopup(popup, timeout=1200) {
 	document.body.appendChild(popup);
 	setTimeout(() => popup.remove(), timeout);
 }
