@@ -1,4 +1,4 @@
-import { threshold } from "./utils";
+import { threshold } from "../utils/alphanumeric.js";
 
 export default async function doAction({
 	media,

@@ -1,6 +1,8 @@
-import { optionsTable, controlsTable } from "./tables.js";
-import { byId, file2object, isNavigationKey, isNumber } from "./utils.js";
-import downloadObject from "./download-object.js";
+import { isNumber } from "../utils/alphanumeric.js";
+import { byId } from "../utils/domElements.js";
+import { isNavigationKey } from "../utils/domEvents.js";
+import { downloadObject, file2object } from "../utils/mixed.js";
+import { controlsTable, optionsTable } from "../utils/tables.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
 	try {

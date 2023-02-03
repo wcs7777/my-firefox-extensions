@@ -1,6 +1,6 @@
-import populateControls from "./populate-controls.js";
-import populateOptions from "./populate-options.js";
-import { utilsTable, optionsTable, controlsTable } from "./tables.js";
+import populateControls from "../utils/populateControls.js";
+import populateOptions from "../utils/populateOptions.js";
+import { controlsTable, optionsTable, utilsTable } from "../utils/tables.js";
 
 (async () => {
 	populate(controlsTable, populateControls)

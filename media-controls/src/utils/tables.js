@@ -1,5 +1,5 @@
+import localStorage from "./localStorage.js";
 import Table from "./table.js";
-import localStorage from "./local-storage.js";
 
 export const database = localStorage;
 export const optionsTable = new Table("options", database);

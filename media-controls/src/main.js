@@ -1,16 +1,11 @@
-import doAction from "./do-action.js";
-import { onCut, onlyTimeOnKeydown, onlyTimeOnPaste } from "./input-time.js";
-import { createPopup, showPopup } from "./popup.js";
-import { controlsTable, optionsTable } from "./tables.js";
-import {
-	$$,
-	formatSeconds,
-	onAppend,
-	onRemoved,
-	sleep,
-	tag,
-	threshold,
-} from "./utils.js";
+import { formatSeconds } from "./utils/alphanumeric.js";
+import doAction from "./utils/doAction.js";
+import { $$ } from "./utils/domElements.js";
+import { onAppend, onRemoved } from "./utils/domEvents.js";
+import MediaTimeInput from "./utils/MediaTimeInput.js";
+import { sleep } from "./utils/mixed.js";
+import { createPopup, showPopup } from "./utils/popup.js";
+import { controlsTable, optionsTable } from "./utils/tables.js";
 
 (async () => {
 	try {
@@ -39,6 +34,7 @@ import {
 	.catch(console.error);
 
 async function main() {
+	console.log("media controls main");
 	const {
 		shortcut,
 		gotoShortcut,
@@ -67,6 +63,25 @@ async function main() {
 		...controls.decreaseVolume,
 		...controls.toggleMute,
 	];
+	const mediaTimeInput = new MediaTimeInput({
+		separator: ":",
+		shortcuts: { synchronizeValue: "s" },
+		media: null,
+		cssText: `
+			position: fixed;
+			width: 100px;
+			height: 40px;
+			top: 50%;
+			left: 50%;
+			margin-top: -20px;
+			margin-left: -50px;
+			padding: 10px;
+			color: rgb(255, 255, 255);
+			background-color: rgba(0, 0, 0, .8);
+			font: 25px/1.2 Arial, sens-serif;
+			z-index: 99999;
+		`,
+	});
 	let currentMedia = null;
 	let inUse = false;
 	let savePoint = 0;
@@ -89,8 +104,8 @@ async function main() {
 			if (validKey(e)) {
 				e.preventDefault();
 				const action = Object
-					.keys(controls)
-					.find((action) => controls[action].includes(e.key));
+				.keys(controls)
+				.find((action) => controls[action].includes(e.key));
 				await doAction({
 					media: currentMedia,
 					action: action,
@@ -116,87 +131,22 @@ async function main() {
 		}
 	}
 
+	mediaTimeInput.addEventListener("removed", async () => {
+		try {
+			setInUse(true);
+			await sleep(100);
+			await currentMedia.play();
+		} catch (error) {
+			console.error(error);
+		}
+	});
+
 	function gotoTimeListener(e) {
 		if (e.ctrlKey && e.key.toUpperCase() === gotoShortcut) {
-			const separator = ":";
 			e.preventDefault();
 			setInUse(false);
-			const input = tag({
-				tagName: "input",
-				cssText: `
-					position: fixed;
-					width: 100px;
-					height: 40px;
-					top: 50%;
-					left: 50%;
-					margin-top: -20px;
-					margin-left: -50px;
-					padding: 10px;
-					color: rgb(255, 255, 255);
-					background-color: rgba(0, 0, 0, .8);
-					font: 25px/1.2 Arial, sens-serif;
-					z-index: 99999;
-				`,
-				attributes: [
-					{
-						name: "value",
-						value: `00${separator}00${separator}00`,
-					},
-				],
-				eventListeners: [
-					{
-						type: "keydown",
-						listener: onEnter,
-					},
-					{
-						type: "keydown",
-						listener: onEscape,
-					},
-					{
-						type: "keydown",
-						listener: onlyTimeOnKeydown.bind(null, separator, currentMedia),
-					},
-					{
-						type: "paste",
-						listener: onlyTimeOnPaste.bind(null, separator),
-					},
-					{
-						type: "cut",
-						listener: onCut,
-					},
-				],
-			});
-			document.body.appendChild(input);
-			input.focus();
-
-			async function onEnter(e) {
-				if (e.key === "Enter") {
-					const [hours, minutes, seconds] = [
-						parseInt(e.target.value.substring(0, 2)),
-						parseInt(e.target.value.substring(3, 5)),
-						parseInt(e.target.value.substring(6, 8)),
-					];
-					currentMedia.currentTime = threshold(
-						hours * 3600 + minutes * 60 + seconds,
-						0,
-						currentMedia.duration,
-					);
-					await currentMedia.play();
-					finalize(e);
-				}
-			}
-
-			function onEscape(e) {
-				if (e.key === "Escape") {
-					finalize(e);
-				}
-			}
-
-			function finalize(e) {
-				e.preventDefault();
-				e.target.remove();
-				setInUse(true);
-			}
+			document.body.appendChild(mediaTimeInput.prepareAppend(currentMedia));
+			mediaTimeInput.focus();
 		}
 	}
 
