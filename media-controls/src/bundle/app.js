@@ -1171,6 +1171,13 @@
 		}
 
 		/**
+		 * @returns {boolean}
+		 */
+		get state() {
+			return this._state;
+		}
+
+		/**
 		 * @param {boolean} newState
 		 */
 		set state(newState) {
@@ -1315,6 +1322,13 @@
 				}),
 			});
 			this.featuresManager = featuresManager;
+		}
+
+		/**
+		 * @returns {boolean}
+		 */
+		get state() {
+			return this._state;
 		}
 
 		/**

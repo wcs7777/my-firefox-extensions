@@ -24,6 +24,13 @@ export default class MainManager extends EventsManager {
 	}
 
 	/**
+	 * @returns {boolean}
+	 */
+	get state() {
+		return this._state;
+	}
+
+	/**
 	 * @param {boolean} newState
 	 */
 	set state(newState) {

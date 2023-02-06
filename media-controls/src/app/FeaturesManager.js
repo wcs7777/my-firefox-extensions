@@ -67,6 +67,13 @@ export default class FeaturesManager extends EventsManager {
 	}
 
 	/**
+	 * @returns {boolean}
+	 */
+	get state() {
+		return this._state;
+	}
+
+	/**
 	 * @param {boolean} newState
 	 */
 	set state(newState) {
