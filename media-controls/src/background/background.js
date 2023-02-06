@@ -67,7 +67,7 @@ async function updateActivated(activated) {
 
 function changeActionIcons({
 	iconsPrefix="icon",
-	iconsPath="../icons",
+	iconsPath="../../icons",
 	iconsExtension="png",
 }={}) {
 	return browser.browserAction.setIcon({

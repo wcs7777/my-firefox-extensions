@@ -22,6 +22,55 @@ export function textNode(data) {
 	return document.createTextNode(data);
 }
 
+/**
+ * @param {string} message
+ * @param {number} timeout
+ */
+export function flashMessage(message, timeout=1200, fontSize=25) {
+	console.log(message);
+	flashElement(
+		createPopup(
+			message
+				.split("\n")
+				.map((line) => {
+					return tag({
+						tagName: "p",
+						textNode: line,
+						cssText: `
+							margin: 0 0 3px;
+							padding: 0;
+						`
+					});
+				}),
+			fontSize,
+		),
+		timeout,
+		document.body,
+	);
+}
+
+export function flashElement(element, timeout=1200, target=document.body) {
+	target.appendChild(element);
+	setTimeout(() => element.remove(), timeout);
+}
+
+export function createPopup(children, fontSize=25) {
+	return tag({
+		tagName: "div",
+		children,
+		cssText: `
+			position: fixed;
+			top: 100px;
+			left: 80px;
+			padding: 16px 16px 13px;
+			color: rgb(255, 255, 255);
+			background-color: rgba(0, 0, 0, .85);
+			font: ${fontSize}px/1.2 Arial, sens-serif;
+			z-index: 99999;
+		`,
+	});
+}
+
 export function tag({
 	tagName,
 	id,

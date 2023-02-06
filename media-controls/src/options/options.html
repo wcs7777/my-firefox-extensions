@@ -8,12 +8,16 @@
 	<form id="setOptions">
 		<label for="shortcut">Shortcut (Ctrl+?)</label>
 		<input type="text" id="shortcut" required>
-		<label for="gotoShortcut">Go To Time Shortcut (Ctrl+?)</label>
-		<input type="text" id="gotoShortcut" required>
+		<label for="jumpToTimeShortcut">Jump To Time Shortcut (Ctrl+?)</label>
+		<input type="text" id="jumpToTimeShortcut" required>
 		<label for="showControlsShortcut">Show Controls Shortcut (Ctrl+?)</label>
 		<input type="text" id="showControlsShortcut" required>
-		<label for="initialDelay">Initial Delay</label>
-		<input type="text" id="initialDelay" pattern="\d+" required>
+		<label for="createSavePointShortcut">Create Save Point Shortcut (Ctrl+?)</label>
+		<input type="text" id="createSavePointShortcut" required>
+		<label for="restoreSavePointShortcut">Restore Save Point Shortcut (Ctrl+?)</label>
+		<input type="text" id="restoreSavePointShortcut" required>
+		<label for="synchronizeValueShortcut">Synchronize Value Shortcut (Ctrl+?)</label>
+		<input type="text" id="synchronizeValueShortcut" required>
 		<label for="timeRate">Time Rate</label>
 		<input type="text" id="timeRate" pattern="\d*\.?\d+" required>
 		<label for="timeCtrlRate">Time Ctrl Rate</label>
@@ -21,7 +25,9 @@
 		<label for="speedRate">Speed Rate</label>
 		<input type="text" id="speedRate" pattern="\d*\.?\d+" required>
 		<label for="speedCtrlRate">Speed Ctrl Rate</label>
-		<input type="text" id="speedCtrlRate"pattern="\d*\.?\d+"  required>
+		<input type="text" id="speedCtrlRate"pattern="\d*\.?\d+" required>
+		<label for="volumeRate">Volume Rate</label>
+		<input type="text" id="volumeRate" pattern="\d*\.?\d+" required>
 		<label for="activated">Activated?</label>
 		<select id="activated">
 			<option value="true" selected>True</option>

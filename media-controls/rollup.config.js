@@ -1,8 +1,8 @@
 export default [
 	{
-		input: "src/main.js",
+		input: "src/app.js",
 		output: {
-			file: "src/bundle/main.js",
+			file: "src/bundle/app.js",
 			format: "iife",
 		},
 	},

@@ -56,8 +56,10 @@ byId("updateControlsTable").addEventListener("submit", async (e) => {
 
 [
 	byId("shortcut"),
-	byId("gotoShortcut"),
+	byId("jumpToTimeShortcut"),
 	byId("showControlsShortcut"),
+	byId("createSavePointShortcut"),
+	byId("restoreSavePointShortcut"),
 ]
 	.forEach(onlyShortcut);
 
@@ -68,6 +70,7 @@ onlyInt(byId("initialDelay"));
 	byId("timeCtrlRate"),
 	byId("speedRate"),
 	byId("speedCtrlRate"),
+	byId("volumeRate"),
 ]
 	.forEach(onlyFloat);
 
