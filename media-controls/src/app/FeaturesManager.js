@@ -111,6 +111,12 @@ export default class FeaturesManager extends EventsManager {
 		}
 	}
 
+	loopListener() {
+		const flag = !this.currentMedia.loop;
+		this.currentMedia.loop = flag;
+		flashMessage(`Loop ${flag ? "On": "Off"}`);
+	}
+
 	async mediaTimeInputRemovedListener() {
 		try {
 			this.on();
@@ -169,6 +175,10 @@ export default class FeaturesManager extends EventsManager {
 			{
 				keys: this.shortcuts.restoreSavePoint,
 				listener: this.restoreSavePointListener,
+			},
+			{
+				keys: this.shortcuts.loop,
+				listener: this.loopListener,
 			},
 		]
 			.map(({ listener, ...rest }) => {

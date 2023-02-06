@@ -11,6 +11,7 @@ async function main() {
 		showControlsShortcut,
 		createSavePointShortcut,
 		restoreSavePointShortcut,
+		loopShortcut,
 		synchronizeValueShortcut,
 		timeRate,
 		timeCtrlRate,
@@ -26,6 +27,7 @@ async function main() {
 				showControls: showControlsShortcut,
 				createSavePoint: createSavePointShortcut,
 				restoreSavePoint: restoreSavePointShortcut,
+				loop: loopShortcut,
 				synchronizeValue: synchronizeValueShortcut,
 			},
 			new ControlsKeydownManager({

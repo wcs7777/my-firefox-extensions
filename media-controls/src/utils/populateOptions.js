@@ -5,6 +5,7 @@ export default function populateOptions(table) {
 		showControlsShortcut: "L",
 		createSavePointShortcut: "P",
 		restoreSavePointShortcut: "E",
+		loopShortcut: "U",
 		synchronizeValueShortcut: "S",
 		timeRate: 5.00,
 		timeCtrlRate: 2.50,

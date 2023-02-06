@@ -1215,6 +1215,12 @@
 			}
 		}
 
+		loopListener() {
+			const flag = !this.currentMedia.loop;
+			this.currentMedia.loop = flag;
+			flashMessage(`Loop ${flag ? "On": "Off"}`);
+		}
+
 		async mediaTimeInputRemovedListener() {
 			try {
 				this.on();
@@ -1274,6 +1280,10 @@
 					keys: this.shortcuts.restoreSavePoint,
 					listener: this.restoreSavePointListener,
 				},
+				{
+					keys: this.shortcuts.loop,
+					listener: this.loopListener,
+				},
 			]
 				.map(({ listener, ...rest }) => {
 					return createOnKeydown({
@@ -1329,6 +1339,7 @@
 			showControlsShortcut,
 			createSavePointShortcut,
 			restoreSavePointShortcut,
+			loopShortcut,
 			synchronizeValueShortcut,
 			timeRate,
 			timeCtrlRate,
@@ -1344,6 +1355,7 @@
 					showControls: showControlsShortcut,
 					createSavePoint: createSavePointShortcut,
 					restoreSavePoint: restoreSavePointShortcut,
+					loop: loopShortcut,
 					synchronizeValue: synchronizeValueShortcut,
 				},
 				new ControlsKeydownManager({
