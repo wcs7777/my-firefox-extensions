@@ -136,11 +136,10 @@ export default class FeaturesManager extends EventsManager {
 			thisArg.currentMedia = event.currentTarget;
 		};
 		const updateOnRemoved = (media) => {
-			if (thisArg.currentMedia === media) {
-				thisArg.off();
+			if (this.state && thisArg.currentMedia === media) {
 				thisArg.currentMedia = getCurrentMedia();
-				if (thisArg.currentMedia != null) {
-					thisArg.on();
+				if (thisArg.currentMedia == null) {
+					thisArg.off();
 				}
 			}
 		};
