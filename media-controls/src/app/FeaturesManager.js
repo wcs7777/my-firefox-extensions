@@ -66,24 +66,22 @@ export default class FeaturesManager extends EventsManager {
 		this.controlsKeydownManager.media = media;
 	}
 
-	on() {
+	/**
+	 * @param {boolean} newState
+	 */
+	set state(newState) {
 		const medias = getMedias();
-		if (!this.state && medias.length > 0) {
-			super.on();
-			this.controlsKeydownManager.on();
-			this.onMediaAppend.observe();
-			this.currentMedia = getCurrentMedia(medias);
-			this.listenMedias(medias);
-			flashMessage("Media Controls Features On");
-		}
-	}
-
-	off() {
-		if (this.state) {
-			super.off();
-			this.controlsKeydownManager.off();
-			this.onMediaAppend.disconnect();
-			flashMessage("Media Controls Features Off");
+		if (typeof newState === "boolean" && newState !== this.state) {
+			if (newState && medias.length > 0) {
+				this.onMediaAppend.observe();
+				this.currentMedia = getCurrentMedia(medias);
+				this.listenMedias(medias);
+			} else {
+				this.onMediaAppend.disconnect();
+			}
+			this.controlsKeydownManager.state = newState;
+			flashMessage(`Media Controls Features ${newState ? "On" : "Off"}`);
+			super.state = newState;
 		}
 	}
 

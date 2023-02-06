@@ -12,10 +12,16 @@ export default class EventsManager {
 		}
 	}
 
+	/**
+	 * @returns {boolean}
+	 */
 	get state() {
 		return this._state;
 	}
 
+	/**
+	 * @param {boolean} newState
+	 */
 	set state(newState) {
 		if (typeof newState === "boolean" && newState !== this.state) {
 			if (newState) {

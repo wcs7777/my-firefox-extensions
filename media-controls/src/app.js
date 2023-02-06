@@ -53,7 +53,7 @@ async function main() {
 
 	function activatedOnMessage({ activated }) {
 		if (activated != null) {
-			activated ? manager.on() : manager.off();
+			manager.state = activated;
 		}
 	}
 }

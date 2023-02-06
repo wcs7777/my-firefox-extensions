@@ -379,10 +379,16 @@
 			}
 		}
 
+		/**
+		 * @returns {boolean}
+		 */
 		get state() {
 			return this._state;
 		}
 
+		/**
+		 * @param {boolean} newState
+		 */
 		set state(newState) {
 			if (typeof newState === "boolean" && newState !== this.state) {
 				if (newState) {
@@ -1164,24 +1170,22 @@
 			this.controlsKeydownManager.media = media;
 		}
 
-		on() {
+		/**
+		 * @param {boolean} newState
+		 */
+		set state(newState) {
 			const medias = getMedias();
-			if (!this.state && medias.length > 0) {
-				super.on();
-				this.controlsKeydownManager.on();
-				this.onMediaAppend.observe();
-				this.currentMedia = getCurrentMedia(medias);
-				this.listenMedias(medias);
-				flashMessage("Media Controls Features On");
-			}
-		}
-
-		off() {
-			if (this.state) {
-				super.off();
-				this.controlsKeydownManager.off();
-				this.onMediaAppend.disconnect();
-				flashMessage("Media Controls Features Off");
+			if (typeof newState === "boolean" && newState !== this.state) {
+				if (newState && medias.length > 0) {
+					this.onMediaAppend.observe();
+					this.currentMedia = getCurrentMedia(medias);
+					this.listenMedias(medias);
+				} else {
+					this.onMediaAppend.disconnect();
+				}
+				this.controlsKeydownManager.state = newState;
+				flashMessage(`Media Controls Features ${newState ? "On" : "Off"}`);
+				super.state = newState;
 			}
 		}
 
@@ -1304,10 +1308,15 @@
 			this.featuresManager = featuresManager;
 		}
 
-		off() {
-			if (this.state) {
-				super.off();
-				this.featuresManager.off();
+		/**
+		 * @param {boolean} newState
+		 */
+		set state(newState) {
+			if (typeof newState === "boolean" && newState !== this.state) {
+				if (!newState) {
+					this.featuresManager.off();
+				}
+				super.state = newState;
 			}
 		}
 
@@ -1362,7 +1371,7 @@
 
 		function activatedOnMessage({ activated }) {
 			if (activated != null) {
-				activated ? manager.on() : manager.off();
+				manager.state = activated;
 			}
 		}
 	}

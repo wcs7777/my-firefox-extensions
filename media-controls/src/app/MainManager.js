@@ -23,10 +23,15 @@ export default class MainManager extends EventsManager {
 		this.featuresManager = featuresManager;
 	}
 
-	off() {
-		if (this.state) {
-			super.off();
-			this.featuresManager.off();
+	/**
+	 * @param {boolean} newState
+	 */
+	set state(newState) {
+		if (typeof newState === "boolean" && newState !== this.state) {
+			if (!newState) {
+				this.featuresManager.off();
+			}
+			super.state = newState;
 		}
 	}
 
