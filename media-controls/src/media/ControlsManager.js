@@ -240,7 +240,7 @@ export default class ControlsManager extends EventsManager {
 		try {
 			this.on();
 			await sleep(100);
-			await this.media.play();
+			await this.resumeMedia();
 		} catch (error) {
 			console.error(error);
 		}
@@ -381,7 +381,6 @@ export default class ControlsManager extends EventsManager {
 						return {
 							...obj,
 							ctrlKey: true,
-							preventDefault: true,
 						};
 					}),
 			]

@@ -703,7 +703,7 @@
 			try {
 				this.on();
 				await sleep(100);
-				await this.media.play();
+				await this.resumeMedia();
 			} catch (error) {
 				console.error(error);
 			}
@@ -844,7 +844,6 @@
 							return {
 								...obj,
 								ctrlKey: true,
-								preventDefault: true,
 							};
 						}),
 				]
