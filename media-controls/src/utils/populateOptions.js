@@ -1,11 +1,6 @@
 export default function populateOptions(table) {
 	return table.set({
 		shortcut: ";",
-		jumpToTimeShortcut: "G",
-		showControlsShortcut: "L",
-		createSavePointShortcut: "P",
-		restoreSavePointShortcut: "E",
-		loopShortcut: "U",
 		synchronizeValueShortcut: "S",
 		timeRate: 5.00,
 		timeCtrlRate: 2.50,

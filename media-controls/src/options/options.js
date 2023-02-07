@@ -56,11 +56,6 @@ byId("updateControlsTable").addEventListener("submit", async (e) => {
 
 [
 	byId("shortcut"),
-	byId("jumpToTimeShortcut"),
-	byId("showControlsShortcut"),
-	byId("createSavePointShortcut"),
-	byId("restoreSavePointShortcut"),
-	byId("loopShortcut"),
 	byId("synchronizeValueShortcut"),
 ]
 	.forEach(onlyShortcut);

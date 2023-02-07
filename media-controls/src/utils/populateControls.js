@@ -12,5 +12,14 @@ export default function populateControls(table) {
 		increaseVolume: ["="],
 		decreaseVolume: ["-"],
 		toggleMute: ["m", "M"],
+		toggleFullscreen: ["f", "F"],
+		showCurrentTime: ["i", "I"],
+		ctrl: {
+			showControls: ["l", "L"],
+			createRestorePoint: ["p", "P"],
+			restoreSavePoint: ["e", "E"],
+			toggleLoop: ["u", "U"],
+			jumpToTime: ["g", "G"],
+		},
 	});
 }

@@ -1,17 +1,12 @@
+import MainManager from "./app/MainManager.js";
+import ControlsManager from "./media/ControlsManager.js";
+import MediaTimeInput from "./media/MediaTimeInput.js";
 import { sleep } from "./utils/mixed.js";
 import { controlsTable, optionsTable } from "./utils/tables.js";
-import MainManager from "./app/MainManager.js";
-import FeaturesManager from "./app/FeaturesManager.js";
-import ControlsKeydownManager from "./media/ControlsKeydownManager.js";
 
 async function main() {
 	const {
 		shortcut,
-		jumpToTimeShortcut,
-		showControlsShortcut,
-		createSavePointShortcut,
-		restoreSavePointShortcut,
-		loopShortcut,
 		synchronizeValueShortcut,
 		timeRate,
 		timeCtrlRate,
@@ -21,33 +16,41 @@ async function main() {
 	} = await optionsTable.getAll();
 	const manager = new MainManager(
 		shortcut,
-		new FeaturesManager(
-			{
-				jumpToTime: jumpToTimeShortcut,
-				showControls: showControlsShortcut,
-				createSavePoint: createSavePointShortcut,
-				restoreSavePoint: restoreSavePointShortcut,
-				loop: loopShortcut,
-				synchronizeValue: synchronizeValueShortcut,
-			},
-			new ControlsKeydownManager({
-				controls: await controlsTable.getAll(),
-				maxSpeed: 5.00,
-				minSpeed: 0.25,
-				rates: {
-					time: timeRate,
-					speed: speedRate,
-					volume: volumeRate,
-					ctrl: {
-						time: timeCtrlRate,
-						speed: speedCtrlRate,
-					},
+		new ControlsManager({
+			controls: await controlsTable.getAll(),
+			maxSpeed: 5.00,
+			minSpeed: 0.25,
+			rates: {
+				time: timeRate,
+				speed: speedRate,
+				volume: volumeRate,
+				ctrl: {
+					time: timeCtrlRate,
+					speed: speedCtrlRate,
 				},
-				exceptionConditions: [
-					youtubeExceptionCondition,
-				]
+			},
+			exceptionConditions: [
+				youtubeExceptionCondition,
+			],
+			mediaTimeInput: new MediaTimeInput({
+				shortcuts: { synchronizeValue: synchronizeValueShortcut },
+				separator: ":",
+				cssText: `
+					position: fixed;
+					width: 100px;
+					height: 40px;
+					top: 50%;
+					left: 50%;
+					margin-top: -20px;
+					margin-left: -50px;
+					padding: 10px;
+					color: rgb(255, 255, 255);
+					background-color: rgba(0, 0, 0, .8);
+					font: 25px/1.2 Arial, sens-serif;
+					z-index: 99999;
+				`,
 			}),
-		),
+		}),
 	);
 	if (!browser.runtime.onMessage.hasListener(activatedOnMessage)) {
 		browser.runtime.onMessage.addListener(activatedOnMessage);

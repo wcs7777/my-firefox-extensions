@@ -1,10 +1,11 @@
+import { formatSeconds } from "../utils/alphanumeric.js";
 import { flashMessage } from "../utils/domElements.js";
 import { createOnKeydown } from "../utils/domEvents.js";
 import EventsManager from "../utils/EventsManager.js";
-import { toArray } from "../utils/mixed.js";
+import { sleep, toArray } from "../utils/mixed.js";
 import * as doAction from "./doAction.js";
 
-export default class ControlsKeydownManager extends EventsManager {
+export default class ControlsManager extends EventsManager {
 
 	constructor({
 		media,
@@ -13,6 +14,7 @@ export default class ControlsKeydownManager extends EventsManager {
 		maxSpeed,
 		minSpeed,
 		exceptionConditions=[],
+		mediaTimeInput,
 	}={}) {
 		super({
 			target: document,
@@ -25,7 +27,22 @@ export default class ControlsKeydownManager extends EventsManager {
 		this.maxSpeed = maxSpeed;
 		this.minSpeed = minSpeed;
 		this.exceptionConditions = toArray(exceptionConditions);
+		this.mediaTimeInput = mediaTimeInput;
 		this.add(this.createListeners());
+		this.savePoint = 0;
+		this.mediaTimeInput.addEventListener(
+			"removed", this.mediaTimeInputRemovedListener.bind(this),
+		);
+	}
+
+	on() {
+		super.on();
+		flashMessage("Media Controls On");
+	}
+
+	off() {
+		super.off();
+		flashMessage("Media Controls Off");
 	}
 
 	/**
@@ -175,10 +192,75 @@ export default class ControlsKeydownManager extends EventsManager {
 		doAction.toggleMute(this.media);
 	}
 
+	async toggleFullscreenListener() {
+		try {
+			if (document.fullscreenElement == null) {
+				await this.media.requestFullscreen();
+			} else {
+				await document.exitFullscreen();
+			}
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
+	showCurrentTimeListener() {
+		const current = formatSeconds(this.media.currentTime);
+		const total = formatSeconds(this.media.duration);
+		flashMessage(`${current} / ${total}`);
+	}
+
+	showControlsListener() {
+		flashMessage(this.toString(), 5000, 16);
+	}
+
+	createRestorePointListener() {
+		this.savePoint = this.media.currentTime;
+		flashMessage(`Save Point Created: ${formatSeconds(this.savePoint)}`);
+	}
+
+	restoreSavePointListener() {
+		this.media.currentTime = this.savePoint;
+		flashMessage(`Save Point Restored: ${formatSeconds(this.savePoint)}`);
+	}
+
+	toggleLoopListener() {
+		const flag = !this.media.loop;
+		this.media.loop = flag;
+		flashMessage(`Loop ${flag ? "On": "Off"}`);
+	}
+
+	jumpToTimeListener() {
+		this.off();
+		document.body.appendChild(this.mediaTimeInput.prepareAppend(this.media));
+		this.mediaTimeInput.focus();
+	}
+
+	async mediaTimeInputRemovedListener() {
+		try {
+			this.on();
+			await sleep(100);
+			await this.media.play();
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
 	toString() {
 		return Object
 			.entries(this.controls)
-			.map(([type, keys]) => `${type}: ${keys.join(", ")}`)
+			.map(([type, keys]) => {
+				return (
+					Array.isArray(keys) ?
+					`${type}: ${keys.join(", ")}` :
+					Object
+						.entries(keys)
+						.map(([subType, subKeys]) => {
+							return `${type} + (${subType}): ${subKeys.join(", ")}`;
+						})
+						.join("\n")
+				);
+			})
 			.join("\n");
 	}
 
@@ -210,18 +292,8 @@ export default class ControlsKeydownManager extends EventsManager {
 					listener: this.backwardListener,
 				},
 				{
-					keys: this.controls.backward,
-					ctrlKey: true,
-					listener: this.ctrlBackwardListener,
-				},
-				{
 					keys: this.controls.forward,
 					listener: this.forwardListener,
-				},
-				{
-					keys: this.controls.forward,
-					ctrlKey: true,
-					listener: this.ctrlForwardListener,
 				},
 				{
 					keys: this.controls.togglePlay,
@@ -232,18 +304,8 @@ export default class ControlsKeydownManager extends EventsManager {
 					listener: this.increaseSpeedListener,
 				},
 				{
-					keys: this.controls.increaseSpeed,
-					ctrlKey: true,
-					listener: this.ctrlIncreaseSpeedListener,
-				},
-				{
 					keys: this.controls.decreaseSpeed,
 					listener: this.decreaseSpeedListener,
-				},
-				{
-					keys: this.controls.decreaseSpeed,
-					ctrlKey: true,
-					listener: this.ctrlDecreaseSpeedListener,
 				},
 				{
 					keys: this.controls.resetSpeed,
@@ -254,23 +316,74 @@ export default class ControlsKeydownManager extends EventsManager {
 					listener: this.increaseVolumeListener,
 				},
 				{
-					keys: this.controls.increaseVolume,
-					ctrlKey: true,
-					listener: this.ctrlIncreaseVolumeListener,
-				},
-				{
 					keys: this.controls.decreaseVolume,
 					listener: this.decreaseVolumeListener,
-				},
-				{
-					keys: this.controls.decreaseVolume,
-					ctrlKey: true,
-					listener: this.ctrlDecreaseVolumeListener,
 				},
 				{
 					keys: this.controls.toggleMute,
 					listener: this.toggleMuteListener,
 				},
+				{
+					keys: this.controls.toggleFullscreen,
+					listener: this.toggleFullscreenListener,
+				},
+				{
+					keys: this.controls.showCurrentTime,
+					listener: this.showCurrentTimeListener,
+				},
+				...[
+					{
+						keys: this.controls.backward,
+						listener: this.ctrlBackwardListener,
+					},
+					{
+						keys: this.controls.forward,
+						listener: this.ctrlForwardListener,
+					},
+					{
+						keys: this.controls.increaseSpeed,
+						listener: this.ctrlIncreaseSpeedListener,
+					},
+					{
+						keys: this.controls.decreaseSpeed,
+						listener: this.ctrlDecreaseSpeedListener,
+					},
+					{
+						keys: this.controls.increaseVolume,
+						listener: this.ctrlIncreaseVolumeListener,
+					},
+					{
+						keys: this.controls.decreaseVolume,
+						listener: this.ctrlDecreaseVolumeListener,
+					},
+					{
+						keys: this.controls.ctrl.showControls,
+						listener: this.showControlsListener,
+					},
+					{
+						keys: this.controls.ctrl.createRestorePoint,
+						listener: this.createRestorePointListener,
+					},
+					{
+						keys: this.controls.ctrl.restoreSavePoint,
+						listener: this.restoreSavePointListener,
+					},
+					{
+						keys: this.controls.ctrl.toggleLoop,
+						listener: this.toggleLoopListener,
+					},
+					{
+						keys: this.controls.ctrl.jumpToTime,
+						listener: this.jumpToTimeListener,
+					},
+				]
+					.map((obj) => {
+						return {
+							...obj,
+							ctrlKey: true,
+							preventDefault: true,
+						};
+					}),
 			]
 				.map(({ listener, ...rest }) => {
 					return createOnKeydown({

@@ -1,20 +1,6 @@
 (function () {
 	'use strict';
 
-	function sleep(ms) {
-		return new Promise((resolve) => {
-			setTimeout(resolve, ms);
-		});
-	}
-
-	function toArray(value) {
-		return Array.isArray(value) ? value : [value];
-	}
-
-	function toObject(value) {
-		return typeof value === "object" ? value : { [value]: value };
-	}
-
 	function threshold(value, min, max) {
 		return Math.max(Math.min(value, max), min);
 	}
@@ -58,82 +44,19 @@
 		return value.toString().padStart(2, "0");
 	}
 
-	var localStorage = {
-		async set(key, value) {
-			const keys = value !== undefined ? { [key]: value } : key;
-			return browser.storage.local.set(keys);
-		},
-
-		async get(key) {
-			const result = await browser.storage.local.get(key);
-			return isString(key) ? result[key] : result;
-		},
-
-		async remove(keys) {
-			return browser.storage.local.remove(keys);
-		},
-
-		async getAll() {
-			return browser.storage.local.get();
-		},
-	};
-
-	class Table {
-		constructor(name="table", database) {
-			this.name = name;
-			this.database = database;
-		}
-
-		async get(key) {
-			const table = await this.getAll();
-			return (
-				!Array.isArray(key) ?
-				table[key] :
-				key.reduce((obj, k) => {
-					return { ...obj, [k]: table[k] };
-				}, {})
-			);
-		}
-
-		async set(key, value) {
-			let table = await this.getAll();
-			if (value !== undefined) {
-				table[key] = value;
-			} else {
-				if (Array.isArray(table)) {
-					table = [...table, ...toArray(key)];
-				} else {
-					table = { ...table, ...toObject(key) };
-				}
-			}
-			return this.database.set(this.name, table);
-		}
-
-		async getAll() {
-			return await this.database.get(this.name) || {};
-		}
-
-		async getKeys() {
-			return Object.keys(await this.getAll());
-		}
-
-		async remove(keys) {
-			const table = await this.getAll();
-			for (const key of toArray(keys)) {
-				delete table[key];
-			}
-			return this.database.set(this.name, table);
-		}
-
-		async removeAll() {
-			return this.database.remove(this.name);
-		}
+	function sleep(ms) {
+		return new Promise((resolve) => {
+			setTimeout(resolve, ms);
+		});
 	}
 
-	const database = localStorage;
-	const optionsTable = new Table("options", database);
-	new Table("utils", database);
-	const controlsTable = new Table("controls", database);
+	function toArray(value) {
+		return Array.isArray(value) ? value : [value];
+	}
+
+	function toObject(value) {
+		return typeof value === "object" ? value : { [value]: value };
+	}
 
 	function $$(selectors, target=document) {
 		return Array.from(target.querySelectorAll(selectors));
@@ -545,7 +468,7 @@
 		return media.muted = !media.muted;
 	}
 
-	class ControlsKeydownManager extends EventsManager {
+	class ControlsManager extends EventsManager {
 
 		constructor({
 			media,
@@ -554,6 +477,7 @@
 			maxSpeed,
 			minSpeed,
 			exceptionConditions=[],
+			mediaTimeInput,
 		}={}) {
 			super({
 				target: document,
@@ -566,7 +490,22 @@
 			this.maxSpeed = maxSpeed;
 			this.minSpeed = minSpeed;
 			this.exceptionConditions = toArray(exceptionConditions);
+			this.mediaTimeInput = mediaTimeInput;
 			this.add(this.createListeners());
+			this.savePoint = 0;
+			this.mediaTimeInput.addEventListener(
+				"removed", this.mediaTimeInputRemovedListener.bind(this),
+			);
+		}
+
+		on() {
+			super.on();
+			flashMessage("Media Controls On");
+		}
+
+		off() {
+			super.off();
+			flashMessage("Media Controls Off");
 		}
 
 		/**
@@ -716,10 +655,75 @@
 			toggleMute(this.media);
 		}
 
+		async toggleFullscreenListener() {
+			try {
+				if (document.fullscreenElement == null) {
+					await this.media.requestFullscreen();
+				} else {
+					await document.exitFullscreen();
+				}
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+		showCurrentTimeListener() {
+			const current = formatSeconds(this.media.currentTime);
+			const total = formatSeconds(this.media.duration);
+			flashMessage(`${current} / ${total}`);
+		}
+
+		showControlsListener() {
+			flashMessage(this.toString(), 5000, 16);
+		}
+
+		createRestorePointListener() {
+			this.savePoint = this.media.currentTime;
+			flashMessage(`Save Point Created: ${formatSeconds(this.savePoint)}`);
+		}
+
+		restoreSavePointListener() {
+			this.media.currentTime = this.savePoint;
+			flashMessage(`Save Point Restored: ${formatSeconds(this.savePoint)}`);
+		}
+
+		toggleLoopListener() {
+			const flag = !this.media.loop;
+			this.media.loop = flag;
+			flashMessage(`Loop ${flag ? "On": "Off"}`);
+		}
+
+		jumpToTimeListener() {
+			this.off();
+			document.body.appendChild(this.mediaTimeInput.prepareAppend(this.media));
+			this.mediaTimeInput.focus();
+		}
+
+		async mediaTimeInputRemovedListener() {
+			try {
+				this.on();
+				await sleep(100);
+				await this.media.play();
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
 		toString() {
 			return Object
 				.entries(this.controls)
-				.map(([type, keys]) => `${type}: ${keys.join(", ")}`)
+				.map(([type, keys]) => {
+					return (
+						Array.isArray(keys) ?
+						`${type}: ${keys.join(", ")}` :
+						Object
+							.entries(keys)
+							.map(([subType, subKeys]) => {
+								return `${type} + (${subType}): ${subKeys.join(", ")}`;
+							})
+							.join("\n")
+					);
+				})
 				.join("\n");
 		}
 
@@ -751,18 +755,8 @@
 						listener: this.backwardListener,
 					},
 					{
-						keys: this.controls.backward,
-						ctrlKey: true,
-						listener: this.ctrlBackwardListener,
-					},
-					{
 						keys: this.controls.forward,
 						listener: this.forwardListener,
-					},
-					{
-						keys: this.controls.forward,
-						ctrlKey: true,
-						listener: this.ctrlForwardListener,
 					},
 					{
 						keys: this.controls.togglePlay,
@@ -773,18 +767,8 @@
 						listener: this.increaseSpeedListener,
 					},
 					{
-						keys: this.controls.increaseSpeed,
-						ctrlKey: true,
-						listener: this.ctrlIncreaseSpeedListener,
-					},
-					{
 						keys: this.controls.decreaseSpeed,
 						listener: this.decreaseSpeedListener,
-					},
-					{
-						keys: this.controls.decreaseSpeed,
-						ctrlKey: true,
-						listener: this.ctrlDecreaseSpeedListener,
 					},
 					{
 						keys: this.controls.resetSpeed,
@@ -795,23 +779,74 @@
 						listener: this.increaseVolumeListener,
 					},
 					{
-						keys: this.controls.increaseVolume,
-						ctrlKey: true,
-						listener: this.ctrlIncreaseVolumeListener,
-					},
-					{
 						keys: this.controls.decreaseVolume,
 						listener: this.decreaseVolumeListener,
-					},
-					{
-						keys: this.controls.decreaseVolume,
-						ctrlKey: true,
-						listener: this.ctrlDecreaseVolumeListener,
 					},
 					{
 						keys: this.controls.toggleMute,
 						listener: this.toggleMuteListener,
 					},
+					{
+						keys: this.controls.toggleFullscreen,
+						listener: this.toggleFullscreenListener,
+					},
+					{
+						keys: this.controls.showCurrentTime,
+						listener: this.showCurrentTimeListener,
+					},
+					...[
+						{
+							keys: this.controls.backward,
+							listener: this.ctrlBackwardListener,
+						},
+						{
+							keys: this.controls.forward,
+							listener: this.ctrlForwardListener,
+						},
+						{
+							keys: this.controls.increaseSpeed,
+							listener: this.ctrlIncreaseSpeedListener,
+						},
+						{
+							keys: this.controls.decreaseSpeed,
+							listener: this.ctrlDecreaseSpeedListener,
+						},
+						{
+							keys: this.controls.increaseVolume,
+							listener: this.ctrlIncreaseVolumeListener,
+						},
+						{
+							keys: this.controls.decreaseVolume,
+							listener: this.ctrlDecreaseVolumeListener,
+						},
+						{
+							keys: this.controls.ctrl.showControls,
+							listener: this.showControlsListener,
+						},
+						{
+							keys: this.controls.ctrl.createRestorePoint,
+							listener: this.createRestorePointListener,
+						},
+						{
+							keys: this.controls.ctrl.restoreSavePoint,
+							listener: this.restoreSavePointListener,
+						},
+						{
+							keys: this.controls.ctrl.toggleLoop,
+							listener: this.toggleLoopListener,
+						},
+						{
+							keys: this.controls.ctrl.jumpToTime,
+							listener: this.jumpToTimeListener,
+						},
+					]
+						.map((obj) => {
+							return {
+								...obj,
+								ctrlKey: true,
+								preventDefault: true,
+							};
+						}),
 				]
 					.map(({ listener, ...rest }) => {
 						return createOnKeydown({
@@ -830,6 +865,98 @@
 
 	function getCurrentMedia(medias=getMedias()) {
 		return medias.find((media) => !media.isPaused) || medias?.[0];
+	}
+
+	class MainManager extends EventsManager {
+
+		/**
+		 * @param {string} shortcut
+		 * @param {ControlsManager} controlsManager
+		 */
+		constructor(shortcut, controlsManager) {
+			super({
+				target: document,
+				type: "keydown",
+				on: true,
+				listeners: [],
+			});
+			this.controlsManager = controlsManager;
+			this.onMediaAppend = onAppend({
+				selectors: "video, audio",
+				options: { childList: true, subtree: true },
+				listener: this.listenMedias.bind(this),
+			});
+			this.add(
+				createOnKeydown({
+					keys: shortcut,
+					ctrlKey: true,
+					caseSensitive: false,
+					listener: this.toggleControlsManager.bind(this),
+				}),
+			);
+		}
+
+		/**
+		 * @returns {boolean}
+		 */
+		get state() {
+			return this._state;
+		}
+
+		/**
+		 * @param {boolean} newState
+		 */
+		set state(newState) {
+			if (typeof newState === "boolean" && newState !== this.state) {
+				if (!newState && this.controlsManager.state) {
+					this.toggleControlsManager();
+				}
+				super.state = newState;
+			}
+		}
+
+		toggleControlsManager() {
+			if (this.controlsManager.state) {
+				this.onMediaAppend.disconnect();
+				this.controlsManager.off();
+			} else {
+				const medias = getMedias();
+				if (medias.length > 0) {
+					this.onMediaAppend.observe();
+					this.controlsManager.media = getCurrentMedia(medias);
+					this.listenMedias(medias);
+					this.controlsManager.on();
+				}
+			}
+		}
+
+		/**
+		 * @param {HTMLMediaElement[]} medias
+		 */
+		listenMedias(medias) {
+			const manager = this.controlsManager;
+			const setCurrentMedia = (event) => manager.media = event.currentTarget;
+			const updateOnRemoved = (media) => {
+				if (manager.state && manager.media === media) {
+					manager.media = getCurrentMedia();
+					if (manager.media == null) {
+						manager.off();
+					}
+				}
+			};
+			for (const media of medias) {
+				media.removeEventListener("play", setCurrentMedia);
+				media.addEventListener("play", setCurrentMedia);
+				if (media.__onRemovedMutationObserver == null) {
+					media.__onRemovedMutationObserver = onRemoved({
+						element: media,
+						options: { childList: true, subtree: true },
+						listener: updateOnRemoved,
+					});
+				}
+			}
+		}
+
 	}
 
 	class MediaTimeInput {
@@ -1112,247 +1239,86 @@
 
 	}
 
-	class FeaturesManager extends EventsManager {
+	var localStorage = {
+		async set(key, value) {
+			const keys = value !== undefined ? { [key]: value } : key;
+			return browser.storage.local.set(keys);
+		},
 
-		/**
-		 * @param {ControlsKeydownManager} controlsKeydownManager
-		 */
-		constructor(shortcuts, controlsKeydownManager) {
-			super({
-				target: document,
-				type: "keydown",
-				listeners: [],
-			});
-			this.shortcuts = shortcuts;
-			this.controlsKeydownManager = controlsKeydownManager;
-			this.savePoint = 0;
-			this.mediaTimeInput = new MediaTimeInput({
-				shortcuts: { synchronizeValue: this.shortcuts.synchronizeValue },
-				separator: ":",
-				cssText: `
-			position: fixed;
-			width: 100px;
-			height: 40px;
-			top: 50%;
-			left: 50%;
-			margin-top: -20px;
-			margin-left: -50px;
-			padding: 10px;
-			color: rgb(255, 255, 255);
-			background-color: rgba(0, 0, 0, .8);
-			font: 25px/1.2 Arial, sens-serif;
-			z-index: 99999;
-			`,
-			});
-			this.onMediaAppend = onAppend({
-				selectors: "video, audio",
-				options: { childList: true, subtree: true },
-				listener: this.listenMedias.bind(this),
-			});
-			this.mediaTimeInput.addEventListener(
-				"removed", this.mediaTimeInputRemovedListener.bind(this)
+		async get(key) {
+			const result = await browser.storage.local.get(key);
+			return isString(key) ? result[key] : result;
+		},
+
+		async remove(keys) {
+			return browser.storage.local.remove(keys);
+		},
+
+		async getAll() {
+			return browser.storage.local.get();
+		},
+	};
+
+	class Table {
+		constructor(name="table", database) {
+			this.name = name;
+			this.database = database;
+		}
+
+		async get(key) {
+			const table = await this.getAll();
+			return (
+				!Array.isArray(key) ?
+				table[key] :
+				key.reduce((obj, k) => {
+					return { ...obj, [k]: table[k] };
+				}, {})
 			);
-			this.add(this.createListeners());
 		}
 
-		/**
-		 * @returns {HTMLMediaElement}
-		*/
-		get currentMedia() {
-			return this._currentMedia;
-		}
-
-		/**
-		 * @param {HTMLMediaElement} media
-		*/
-		set currentMedia(media) {
-			this._currentMedia = media;
-			this.controlsKeydownManager.media = media;
-		}
-
-		/**
-		 * @returns {boolean}
-		 */
-		get state() {
-			return this._state;
-		}
-
-		/**
-		 * @param {boolean} newState
-		 */
-		set state(newState) {
-			const medias = getMedias();
-			if (typeof newState === "boolean" && newState !== this.state) {
-				if (newState && medias.length > 0) {
-					this.onMediaAppend.observe();
-					this.currentMedia = getCurrentMedia(medias);
-					this.listenMedias(medias);
+		async set(key, value) {
+			let table = await this.getAll();
+			if (value !== undefined) {
+				table[key] = value;
+			} else {
+				if (Array.isArray(table)) {
+					table = [...table, ...toArray(key)];
 				} else {
-					this.onMediaAppend.disconnect();
-				}
-				this.controlsKeydownManager.state = newState;
-				flashMessage(`Media Controls Features ${newState ? "On" : "Off"}`);
-				super.state = newState;
-			}
-		}
-
-		jumpToTimeListener() {
-			this.off();
-			document.body.appendChild(
-				this.mediaTimeInput.prepareAppend(this.currentMedia),
-			);
-			this.mediaTimeInput.focus();
-		}
-
-		showControlsListener() {
-			flashMessage(this.controlsKeydownManager.toString(), 5000, 16);
-		}
-
-		createSavePointListener() {
-			this.savePoint = this.currentMedia.currentTime;
-			if (this.savePoint != null) {
-				flashMessage(`Save Point Created: ${formatSeconds(this.savePoint)}`);
-			}
-		}
-
-		restoreSavePointListener() {
-			if (this.savePoint != null) {
-				this.currentMedia.currentTime = this.savePoint;
-				flashMessage(`Save Point Restored: ${formatSeconds(this.savePoint)}`);
-			}
-		}
-
-		loopListener() {
-			const flag = !this.currentMedia.loop;
-			this.currentMedia.loop = flag;
-			flashMessage(`Loop ${flag ? "On": "Off"}`);
-		}
-
-		async mediaTimeInputRemovedListener() {
-			try {
-				this.on();
-				await sleep(100);
-				await this.currentMedia.play();
-			} catch (error) {
-				console.error(error);
-			}
-		}
-
-		/**
-		 * @param {HTMLMediaElement[]} medias
-		 */
-		listenMedias(medias) {
-			const thisArg = this;
-			const setCurrentMedia = (event) => {
-				thisArg.currentMedia = event.currentTarget;
-			};
-			const updateOnRemoved = (media) => {
-				if (this.state && thisArg.currentMedia === media) {
-					thisArg.currentMedia = getCurrentMedia();
-					if (thisArg.currentMedia == null) {
-						thisArg.off();
-					}
-				}
-			};
-			for (const media of medias) {
-				media.removeEventListener("play", setCurrentMedia);
-				media.addEventListener("play", setCurrentMedia);
-				if (media.__onRemovedMutationObserver == null) {
-					media.__onRemovedMutationObserver = onRemoved({
-						element: media,
-						options: { childList: true, subtree: true },
-						listener: updateOnRemoved,
-					});
+					table = { ...table, ...toObject(key) };
 				}
 			}
+			return this.database.set(this.name, table);
 		}
 
-		createListeners() {
-			const thisArg = this;
-			return [
-				{
-					keys: this.shortcuts.jumpToTime,
-					listener: this.jumpToTimeListener,
-				},
-				{
-					keys: this.shortcuts.showControls,
-					listener: this.showControlsListener,
-				},
-				{
-					keys: this.shortcuts.createSavePoint,
-					listener: this.createSavePointListener,
-				},
-				{
-					keys: this.shortcuts.restoreSavePoint,
-					listener: this.restoreSavePointListener,
-				},
-				{
-					keys: this.shortcuts.loop,
-					listener: this.loopListener,
-				},
-			]
-				.map(({ listener, ...rest }) => {
-					return createOnKeydown({
-						listener: listener.bind(thisArg),
-						caseSensitive: false,
-						ctrlKey: true,
-						...rest,
-					});
-				});
+		async getAll() {
+			return await this.database.get(this.name) || {};
 		}
 
+		async getKeys() {
+			return Object.keys(await this.getAll());
+		}
+
+		async remove(keys) {
+			const table = await this.getAll();
+			for (const key of toArray(keys)) {
+				delete table[key];
+			}
+			return this.database.set(this.name, table);
+		}
+
+		async removeAll() {
+			return this.database.remove(this.name);
+		}
 	}
 
-	class MainManager extends EventsManager {
-
-		/**
-		 * @param {string} shortcut
-		 * @param {FeaturesKeydownManager} featuresManager
-		 */
-		constructor(shortcut, featuresManager) {
-			super({
-				target: document,
-				type: "keydown",
-				on: true,
-				listeners: createOnKeydown({
-					keys: shortcut,
-					ctrlKey: true,
-					caseSensitive: false,
-					listener: () => featuresManager.toggle(),
-				}),
-			});
-			this.featuresManager = featuresManager;
-		}
-
-		/**
-		 * @returns {boolean}
-		 */
-		get state() {
-			return this._state;
-		}
-
-		/**
-		 * @param {boolean} newState
-		 */
-		set state(newState) {
-			if (typeof newState === "boolean" && newState !== this.state) {
-				if (!newState) {
-					this.featuresManager.off();
-				}
-				super.state = newState;
-			}
-		}
-
-	}
+	const database = localStorage;
+	const optionsTable = new Table("options", database);
+	new Table("utils", database);
+	const controlsTable = new Table("controls", database);
 
 	async function main() {
 		const {
 			shortcut,
-			jumpToTimeShortcut,
-			showControlsShortcut,
-			createSavePointShortcut,
-			restoreSavePointShortcut,
-			loopShortcut,
 			synchronizeValueShortcut,
 			timeRate,
 			timeCtrlRate,
@@ -1362,33 +1328,41 @@
 		} = await optionsTable.getAll();
 		const manager = new MainManager(
 			shortcut,
-			new FeaturesManager(
-				{
-					jumpToTime: jumpToTimeShortcut,
-					showControls: showControlsShortcut,
-					createSavePoint: createSavePointShortcut,
-					restoreSavePoint: restoreSavePointShortcut,
-					loop: loopShortcut,
-					synchronizeValue: synchronizeValueShortcut,
-				},
-				new ControlsKeydownManager({
-					controls: await controlsTable.getAll(),
-					maxSpeed: 5.00,
-					minSpeed: 0.25,
-					rates: {
-						time: timeRate,
-						speed: speedRate,
-						volume: volumeRate,
-						ctrl: {
-							time: timeCtrlRate,
-							speed: speedCtrlRate,
-						},
+			new ControlsManager({
+				controls: await controlsTable.getAll(),
+				maxSpeed: 5.00,
+				minSpeed: 0.25,
+				rates: {
+					time: timeRate,
+					speed: speedRate,
+					volume: volumeRate,
+					ctrl: {
+						time: timeCtrlRate,
+						speed: speedCtrlRate,
 					},
-					exceptionConditions: [
-						youtubeExceptionCondition,
-					]
+				},
+				exceptionConditions: [
+					youtubeExceptionCondition,
+				],
+				mediaTimeInput: new MediaTimeInput({
+					shortcuts: { synchronizeValue: synchronizeValueShortcut },
+					separator: ":",
+					cssText: `
+					position: fixed;
+					width: 100px;
+					height: 40px;
+					top: 50%;
+					left: 50%;
+					margin-top: -20px;
+					margin-left: -50px;
+					padding: 10px;
+					color: rgb(255, 255, 255);
+					background-color: rgba(0, 0, 0, .8);
+					font: 25px/1.2 Arial, sens-serif;
+					z-index: 99999;
+				`,
 				}),
-			),
+			}),
 		);
 		if (!browser.runtime.onMessage.hasListener(activatedOnMessage)) {
 			browser.runtime.onMessage.addListener(activatedOnMessage);
