@@ -13,7 +13,7 @@ export default function populateControls(table) {
 		decreaseVolume: ["-"],
 		toggleMute: ["m", "M"],
 		toggleFullscreen: ["f", "F"],
-		showCurrentTime: ["i", "I"],
+		showCurrentTime: ["h", "H"],
 		ctrl: {
 			showControls: ["l", "L"],
 			createRestorePoint: ["p", "P"],

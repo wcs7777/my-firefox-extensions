@@ -670,7 +670,10 @@
 		showCurrentTimeListener() {
 			const current = formatSeconds(this.media.currentTime);
 			const total = formatSeconds(this.media.duration);
-			flashMessage(`${current} / ${total}`);
+			const percentage = Math.floor(
+				this.media.currentTime / this.media.duration * 100
+			);
+			flashMessage(`${current} / ${total} | ${percentage}%`);
 		}
 
 		showControlsListener() {
@@ -1312,7 +1315,6 @@
 
 	const database = localStorage;
 	const optionsTable = new Table("options", database);
-	new Table("utils", database);
 	const controlsTable = new Table("controls", database);
 
 	async function main() {

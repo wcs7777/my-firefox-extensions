@@ -207,7 +207,10 @@ export default class ControlsManager extends EventsManager {
 	showCurrentTimeListener() {
 		const current = formatSeconds(this.media.currentTime);
 		const total = formatSeconds(this.media.duration);
-		flashMessage(`${current} / ${total}`);
+		const percentage = Math.floor(
+			this.media.currentTime / this.media.duration * 100
+		);
+		flashMessage(`${current} / ${total} | ${percentage}%`);
 	}
 
 	showControlsListener() {
