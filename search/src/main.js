@@ -133,5 +133,9 @@ function createPopup(item, text) {
 		allowScriptsToClose: true,
 		url: makeUrl({ ...item, text }),
 		type: "popup",
+		height: 325,
+		width: 720,
+		top: 15,
+		left: 290,
 	});
 }
