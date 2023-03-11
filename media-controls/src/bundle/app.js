@@ -1350,12 +1350,12 @@
 					separator: ":",
 					cssText: `
 					position: fixed;
-					width: 8rem;
-					height: 40px;
+					width: 12rem;
+					height: 4rem;
 					top: 50%;
 					left: 50%;
-					margin-top: -20px;
-					margin-left: -50px;
+					margin-top: -4rem;
+					margin-left: -12rem;
 					padding: 10px;
 					color: rgb(255, 255, 255);
 					background-color: rgba(0, 0, 0, .8);
