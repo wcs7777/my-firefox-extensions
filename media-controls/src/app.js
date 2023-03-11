@@ -37,7 +37,7 @@ async function main() {
 				separator: ":",
 				cssText: `
 					position: fixed;
-					width: 100px;
+					width: 8rem;
 					height: 40px;
 					top: 50%;
 					left: 50%;
@@ -47,6 +47,7 @@ async function main() {
 					color: rgb(255, 255, 255);
 					background-color: rgba(0, 0, 0, .8);
 					font: 25px/1.2 Arial, sens-serif;
+					text-align: center;
 					z-index: 99999;
 				`,
 			}),
