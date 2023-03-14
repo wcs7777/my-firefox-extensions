@@ -268,6 +268,7 @@
 		altKey=false,
 		shiftKey=false,
 		preventDefault=true,
+		bypassField=false,
 		listener,
 	}={}) {
 		const onKeys = (
@@ -281,6 +282,7 @@
 				e.ctrlKey === ctrlKey &&
 				e.altKey === altKey &&
 				e.shiftKey === shiftKey &&
+				(!bypassField || !isField(e)) &&
 				true
 			) {
 				if (preventDefault) {
@@ -288,6 +290,15 @@
 				}			listener(e);
 			}
 		};
+
+		function isField(event) {
+			const tagName = event.target.tagName.toLowerCase();
+			return (
+				["input", "textarea"].includes(tagName) ||
+				event.target.hasAttribute("contenteditable") ||
+				false
+			);
+		}
 	}
 
 	class EventsManager {
@@ -493,9 +504,6 @@
 			this.mediaTimeInput = mediaTimeInput;
 			this.add(this.createListeners());
 			this.savePoint = 0;
-			this.mediaTimeInput.addEventListener(
-				"removed", this.mediaTimeInputRemovedListener.bind(this),
-			);
 		}
 
 		on() {
@@ -697,19 +705,8 @@
 		}
 
 		jumpToTimeListener() {
-			this.off();
 			document.body.appendChild(this.mediaTimeInput.prepareAppend(this.media));
 			this.mediaTimeInput.focus();
-		}
-
-		async mediaTimeInputRemovedListener() {
-			try {
-				this.on();
-				await sleep(100);
-				await this.resumeMedia();
-			} catch (error) {
-				console.error(error);
-			}
 		}
 
 		toString() {
@@ -852,6 +849,7 @@
 				]
 					.map(({ listener, ...rest }) => {
 						return createOnKeydown({
+							bypassField: true,
 							listener: listener.bind(thisArg),
 							...rest,
 						});
@@ -893,6 +891,7 @@
 					keys: shortcut,
 					ctrlKey: true,
 					caseSensitive: false,
+					bypassField: true,
 					listener: this.toggleControlsManager.bind(this),
 				}),
 			);

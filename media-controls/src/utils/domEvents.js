@@ -80,6 +80,7 @@ export function createOnKeydown({
 	altKey=false,
 	shiftKey=false,
 	preventDefault=true,
+	bypassField=false,
 	listener,
 }={}) {
 	const onKeys = (
@@ -93,6 +94,7 @@ export function createOnKeydown({
 			e.ctrlKey === ctrlKey &&
 			e.altKey === altKey &&
 			e.shiftKey === shiftKey &&
+			(!bypassField || !isField(e)) &&
 			true
 		) {
 			if (preventDefault) {
@@ -101,6 +103,15 @@ export function createOnKeydown({
 			listener(e);
 		}
 	};
+
+	function isField(event) {
+		const tagName = event.target.tagName.toLowerCase();
+		return (
+			["input", "textarea"].includes(tagName) ||
+			event.target.hasAttribute("contenteditable") ||
+			false
+		);
+	}
 }
 
 export function isNavigationKey(keydownEvent) {

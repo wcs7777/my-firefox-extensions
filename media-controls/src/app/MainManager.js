@@ -28,6 +28,7 @@ export default class MainManager extends EventsManager {
 				keys: shortcut,
 				ctrlKey: true,
 				caseSensitive: false,
+				bypassField: true,
 				listener: this.toggleControlsManager.bind(this),
 			}),
 		);

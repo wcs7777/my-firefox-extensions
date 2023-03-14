@@ -30,9 +30,6 @@ export default class ControlsManager extends EventsManager {
 		this.mediaTimeInput = mediaTimeInput;
 		this.add(this.createListeners());
 		this.savePoint = 0;
-		this.mediaTimeInput.addEventListener(
-			"removed", this.mediaTimeInputRemovedListener.bind(this),
-		);
 	}
 
 	on() {
@@ -234,19 +231,8 @@ export default class ControlsManager extends EventsManager {
 	}
 
 	jumpToTimeListener() {
-		this.off();
 		document.body.appendChild(this.mediaTimeInput.prepareAppend(this.media));
 		this.mediaTimeInput.focus();
-	}
-
-	async mediaTimeInputRemovedListener() {
-		try {
-			this.on();
-			await sleep(100);
-			await this.resumeMedia();
-		} catch (error) {
-			console.error(error);
-		}
 	}
 
 	toString() {
@@ -389,6 +375,7 @@ export default class ControlsManager extends EventsManager {
 			]
 				.map(({ listener, ...rest }) => {
 					return createOnKeydown({
+						bypassField: true,
 						listener: listener.bind(thisArg),
 						...rest,
 					});
