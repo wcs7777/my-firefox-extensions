@@ -58,8 +58,16 @@
 		return typeof value === "object" ? value : { [value]: value };
 	}
 
+	function $(selectors, target=document) {
+		return target.querySelector(selectors);
+	}
+
 	function $$(selectors, target=document) {
 		return Array.from(target.querySelectorAll(selectors));
+	}
+
+	function currentDomain() {
+		return window.location.hostname || window.location.protocol;
 	}
 
 	/**
@@ -188,6 +196,34 @@
 			return this.mutationObserver.takeRecords();
 		}
 
+	}
+
+	function waitElement({
+		selectors,
+		target=document.body,
+		interval=100,
+		timeout=20000,
+	}={}) {
+		return new Promise((resolve, reject) => {
+			const idInterval = setInterval(searchElement, interval);
+			const idTimeout = setTimeout(() => {
+				clear();
+				reject(`${selectors} not found in ${timeout}ms`);
+			}, timeout);
+
+			function searchElement() {
+				const element = $(selectors, target);
+				if (element) {
+					clear();
+					resolve(element);
+				}
+			}
+
+			function clear() {
+				clearInterval(idInterval);
+				clearTimeout(idTimeout);
+			}
+		});
 	}
 
 	function onAppend({
@@ -373,6 +409,83 @@
 		}
 
 	}
+
+	var localStorage = {
+		async set(key, value) {
+			const keys = value !== undefined ? { [key]: value } : key;
+			return browser.storage.local.set(keys);
+		},
+
+		async get(key) {
+			const result = await browser.storage.local.get(key);
+			return isString(key) ? result[key] : result;
+		},
+
+		async remove(keys) {
+			return browser.storage.local.remove(keys);
+		},
+
+		async getAll() {
+			return browser.storage.local.get();
+		},
+	};
+
+	class Table {
+		constructor(name="table", database) {
+			this.name = name;
+			this.database = database;
+		}
+
+		async get(key) {
+			const table = await this.getAll();
+			return (
+				!Array.isArray(key) ?
+				table[key] :
+				key.reduce((obj, k) => {
+					return { ...obj, [k]: table[k] };
+				}, {})
+			);
+		}
+
+		async set(key, value) {
+			let table = await this.getAll();
+			if (value !== undefined) {
+				table[key] = value;
+			} else {
+				if (Array.isArray(table)) {
+					table = [...table, ...toArray(key)];
+				} else {
+					table = { ...table, ...toObject(key) };
+				}
+			}
+			return this.database.set(this.name, table);
+		}
+
+		async getAll() {
+			return await this.database.get(this.name) || {};
+		}
+
+		async getKeys() {
+			return Object.keys(await this.getAll());
+		}
+
+		async remove(keys) {
+			const table = await this.getAll();
+			for (const key of toArray(keys)) {
+				delete table[key];
+			}
+			return this.database.set(this.name, table);
+		}
+
+		async removeAll() {
+			return this.database.remove(this.name);
+		}
+	}
+
+	const database = localStorage;
+	const optionsTable = new Table("options", database);
+	const controlsTable = new Table("controls", database);
+	const domainsTable = new Table("domains", database);
 
 	/**
 	 * @param {HTMLMediaElement} media
@@ -709,6 +822,25 @@
 			this.mediaTimeInput.focus();
 		}
 
+		async toggleAutoActivationDomainListener() {
+			try {
+				const domain = currentDomain();
+				const toggle = !await this.autoActivate(domain);
+				if (toggle) {
+					await domainsTable.set(domain, true);
+				} else {
+					await domainsTable.remove(domain);
+				}
+				flashMessage(`Auto activation: ${toggle ? "On" : "Off"}`);
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+		autoActivate(domain) {
+			return domainsTable.get(domain);
+		}
+
 		toString() {
 			return Object
 				.entries(this.controls)
@@ -838,6 +970,10 @@
 						{
 							keys: this.controls.ctrl.jumpToTime,
 							listener: this.jumpToTimeListener,
+						},
+						{
+							keys: this.controls.ctrl.toggleAutoActivationDomain,
+							listener: this.toggleAutoActivationDomainListener,
 						},
 					]
 						.map((obj) => {
@@ -1240,82 +1376,6 @@
 
 	}
 
-	var localStorage = {
-		async set(key, value) {
-			const keys = value !== undefined ? { [key]: value } : key;
-			return browser.storage.local.set(keys);
-		},
-
-		async get(key) {
-			const result = await browser.storage.local.get(key);
-			return isString(key) ? result[key] : result;
-		},
-
-		async remove(keys) {
-			return browser.storage.local.remove(keys);
-		},
-
-		async getAll() {
-			return browser.storage.local.get();
-		},
-	};
-
-	class Table {
-		constructor(name="table", database) {
-			this.name = name;
-			this.database = database;
-		}
-
-		async get(key) {
-			const table = await this.getAll();
-			return (
-				!Array.isArray(key) ?
-				table[key] :
-				key.reduce((obj, k) => {
-					return { ...obj, [k]: table[k] };
-				}, {})
-			);
-		}
-
-		async set(key, value) {
-			let table = await this.getAll();
-			if (value !== undefined) {
-				table[key] = value;
-			} else {
-				if (Array.isArray(table)) {
-					table = [...table, ...toArray(key)];
-				} else {
-					table = { ...table, ...toObject(key) };
-				}
-			}
-			return this.database.set(this.name, table);
-		}
-
-		async getAll() {
-			return await this.database.get(this.name) || {};
-		}
-
-		async getKeys() {
-			return Object.keys(await this.getAll());
-		}
-
-		async remove(keys) {
-			const table = await this.getAll();
-			for (const key of toArray(keys)) {
-				delete table[key];
-			}
-			return this.database.set(this.name, table);
-		}
-
-		async removeAll() {
-			return this.database.remove(this.name);
-		}
-	}
-
-	const database = localStorage;
-	const optionsTable = new Table("options", database);
-	const controlsTable = new Table("controls", database);
-
 	async function main() {
 		const {
 			shortcut,
@@ -1368,6 +1428,14 @@
 		if (!browser.runtime.onMessage.hasListener(activatedOnMessage)) {
 			browser.runtime.onMessage.addListener(activatedOnMessage);
 		}
+		if (await manager.controlsManager.autoActivate(currentDomain())) {
+			manager.controlsManager.media = await waitElement({
+				selectors: "audio, video",
+				interval: 500,
+				timeout: 3000,
+			});
+			manager.controlsManager.on();
+		}
 
 		function activatedOnMessage({ activated }) {
 			if (activated != null) {
@@ -1398,7 +1466,6 @@
 			true
 		);
 	}
-
 
 	(async () => {
 		try {

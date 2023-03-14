@@ -20,6 +20,7 @@ export default function populateControls(table) {
 			restoreSavePoint: ["e", "E"],
 			toggleLoop: ["u", "U"],
 			jumpToTime: ["g", "G"],
+			toggleAutoActivationDomain: ["j", "J"],
 		},
 	});
 }

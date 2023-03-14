@@ -1,8 +1,9 @@
 import { formatSeconds } from "../utils/alphanumeric.js";
-import { flashMessage } from "../utils/domElements.js";
+import { currentDomain, flashMessage } from "../utils/domElements.js";
 import { createOnKeydown } from "../utils/domEvents.js";
 import EventsManager from "../utils/EventsManager.js";
 import { sleep, toArray } from "../utils/mixed.js";
+import { domainsTable } from "../utils/tables.js";
 import * as doAction from "./doAction.js";
 
 export default class ControlsManager extends EventsManager {
@@ -235,6 +236,25 @@ export default class ControlsManager extends EventsManager {
 		this.mediaTimeInput.focus();
 	}
 
+	async toggleAutoActivationDomainListener() {
+		try {
+			const domain = currentDomain();
+			const toggle = !await this.autoActivate(domain);
+			if (toggle) {
+				await domainsTable.set(domain, true);
+			} else {
+				await domainsTable.remove(domain);
+			}
+			flashMessage(`Auto activation: ${toggle ? "On" : "Off"}`);
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
+	autoActivate(domain) {
+		return domainsTable.get(domain);
+	}
+
 	toString() {
 		return Object
 			.entries(this.controls)
@@ -364,6 +384,10 @@ export default class ControlsManager extends EventsManager {
 					{
 						keys: this.controls.ctrl.jumpToTime,
 						listener: this.jumpToTimeListener,
+					},
+					{
+						keys: this.controls.ctrl.toggleAutoActivationDomain,
+						listener: this.toggleAutoActivationDomainListener,
 					},
 				]
 					.map((obj) => {

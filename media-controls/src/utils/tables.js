@@ -5,3 +5,5 @@ export const database = localStorage;
 export const optionsTable = new Table("options", database);
 export const utilsTable = new Table("utils", database);
 export const controlsTable = new Table("controls", database);
+export const domainsTable = new Table("domains", database);
+

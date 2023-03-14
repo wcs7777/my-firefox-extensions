@@ -12,6 +12,10 @@ export function byId(elementId) {
 	return document.getElementById(elementId);
 }
 
+export function currentDomain() {
+	return window.location.hostname || window.location.protocol;
+}
+
 export function internalStyle(cssText) {
 	const style = document.createElement("style");
 	style.innerHTML = cssText;

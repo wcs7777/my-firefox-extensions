@@ -1,6 +1,8 @@
 import MainManager from "./app/MainManager.js";
 import ControlsManager from "./media/ControlsManager.js";
 import MediaTimeInput from "./media/MediaTimeInput.js";
+import { currentDomain } from "./utils/domElements.js";
+import { waitElement } from "./utils/domEvents.js";
 import { sleep } from "./utils/mixed.js";
 import { controlsTable, optionsTable } from "./utils/tables.js";
 
@@ -56,6 +58,14 @@ async function main() {
 	if (!browser.runtime.onMessage.hasListener(activatedOnMessage)) {
 		browser.runtime.onMessage.addListener(activatedOnMessage);
 	}
+	if (await manager.controlsManager.autoActivate(currentDomain())) {
+		manager.controlsManager.media = await waitElement({
+			selectors: "audio, video",
+			interval: 500,
+			timeout: 3000,
+		});
+		manager.controlsManager.on();
+	}
 
 	function activatedOnMessage({ activated }) {
 		if (activated != null) {
@@ -86,7 +96,6 @@ function youtubeExceptionCondition(event) {
 		true
 	);
 }
-
 
 (async () => {
 	try {

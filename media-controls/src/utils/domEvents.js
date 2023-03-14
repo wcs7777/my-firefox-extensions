@@ -1,6 +1,34 @@
-import { $$ } from "./domElements.js";
+import { $, $$ } from "./domElements.js";
 import { toArray } from "./mixed.js";
 import MutationObserverClosure from "./MutationObserverClosure.js";
+
+export function waitElement({
+	selectors,
+	target=document.body,
+	interval=100,
+	timeout=20000,
+}={}) {
+	return new Promise((resolve, reject) => {
+		const idInterval = setInterval(searchElement, interval);
+		const idTimeout = setTimeout(() => {
+			clear();
+			reject(`${selectors} not found in ${timeout}ms`);
+		}, timeout);
+
+		function searchElement() {
+			const element = $(selectors, target);
+			if (element) {
+				clear();
+				resolve(element);
+			}
+		}
+
+		function clear() {
+			clearInterval(idInterval);
+			clearTimeout(idTimeout);
+		}
+	});
+}
 
 export function onAppend({
 	selectors,
