@@ -1,0 +1,25 @@
+{
+  "manifest_version": 2,
+  "name": "Tabs to Text",
+  "version": "1.1.0",
+  "description": "Save tabs to a text file",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "background": {
+    "page": "src/background.html",
+    "persistent": true
+  },
+  "browser_action": {
+    "default_icon": {
+      "19": "icons/icon-19.png",
+      "38": "icons/icon-38.png"
+    },
+    "default_title": "Tabs to Text"
+  },
+  "permissions": [
+    "storage",
+		"downloads",
+		"tabs"
+  ]
+}
