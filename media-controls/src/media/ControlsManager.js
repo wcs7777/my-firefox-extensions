@@ -71,8 +71,13 @@ export default class ControlsManager extends EventsManager {
 		}
 	}
 
+	saveCurrentPoint() {
+		this.savePoint = this.media.currentTime;
+	}
+
 	async jumpToBeginListener() {
 		try {
+			this.saveCurrentPoint();
 			doAction.jumpToBegin(this.media);
 			await this.resumeMedia();
 		} catch (error) {
@@ -81,6 +86,7 @@ export default class ControlsManager extends EventsManager {
 	}
 
 	jumpToEndListener() {
+		this.saveCurrentPoint();
 		doAction.jumpToEnd(this.media);
 	}
 
@@ -216,7 +222,7 @@ export default class ControlsManager extends EventsManager {
 	}
 
 	createRestorePointListener() {
-		this.savePoint = this.media.currentTime;
+		this.saveCurrentPoint();
 		flashMessage(`Save Point Created: ${formatSeconds(this.savePoint)}`);
 	}
 

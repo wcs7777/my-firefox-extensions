@@ -657,8 +657,13 @@
 			}
 		}
 
+		saveCurrentPoint() {
+			this.savePoint = this.media.currentTime;
+		}
+
 		async jumpToBeginListener() {
 			try {
+				this.saveCurrentPoint();
 				jumpToBegin(this.media);
 				await this.resumeMedia();
 			} catch (error) {
@@ -667,6 +672,7 @@
 		}
 
 		jumpToEndListener() {
+			this.saveCurrentPoint();
 			jumpToEnd(this.media);
 		}
 
@@ -802,7 +808,7 @@
 		}
 
 		createRestorePointListener() {
-			this.savePoint = this.media.currentTime;
+			this.saveCurrentPoint();
 			flashMessage(`Save Point Created: ${formatSeconds(this.savePoint)}`);
 		}
 
