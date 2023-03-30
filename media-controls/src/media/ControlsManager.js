@@ -214,7 +214,7 @@ export default class ControlsManager extends EventsManager {
 		const percentage = Math.floor(
 			this.media.currentTime / this.media.duration * 100
 		);
-		flashMessage(`${current} / ${total} | ${percentage}%`);
+		flashMessage(`${current} / ${total} | ${percentage}%`, 3000);
 	}
 
 	showControlsListener() {
