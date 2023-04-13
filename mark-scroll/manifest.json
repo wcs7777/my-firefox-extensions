@@ -20,12 +20,6 @@
     "page": "src/background/background.html",
     "persistent": true
   },
-	"sidebar_action": {
-		"default_title": "Marks",
-		"default_panel": "src/sidebar/sidebar.html",
-		"default_icon": "icons/icon.svg",
-		"open_at_install": false
-	},
   "permissions": [
     "storage",
     "menus",
