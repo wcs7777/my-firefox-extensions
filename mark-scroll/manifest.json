@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Mark Scroll",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Mark scroll positions in the page to return to them later",
   "icons": {
     "48": "icons/icon.svg",
