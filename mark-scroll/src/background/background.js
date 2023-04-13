@@ -39,32 +39,49 @@ function createContextMenus(accessKey) {
 		title: `&${accessKey} - Mark Scroll`,
 		contexts: ["all"],
 	});
-	const addParentId = createContextMenu({
-		id: "add-mark-scroll-entry",
-		title: "&Add",
-		contexts: ["all"],
-		parentId,
-	});
-	const goToParentId = createContextMenu({
-		id: "go-to-mark-scroll-entry",
-		title: "&Go",
-		contexts: ["all"],
-		parentId,
-	});
-	for (let i = 1; i <= maxMarks; ++i) {
-		createContextMenu({
-			id: `add-mark-scroll-${i}`,
-			title: `${i} mark`,
-			parentId: addParentId,
+	if (maxMarks > 1) {
+		const addParentId = createContextMenu({
+			id: "add-mark-scroll-entry",
+			title: "&Add",
 			contexts: ["all"],
-			listener: addScrollMarkListener.bind(null, i - 1),
+			parentId,
+		});
+		const goToParentId = createContextMenu({
+			id: "go-to-mark-scroll-entry",
+			title: "&Go",
+			contexts: ["all"],
+			parentId,
+		});
+		for (let i = 1; i <= maxMarks; ++i) {
+			createContextMenu({
+				id: `add-mark-scroll-${i}`,
+				title: `&${i} mark`,
+				parentId: addParentId,
+				contexts: ["all"],
+				listener: addScrollMarkListener.bind(null, i - 1),
+			});
+			createContextMenu({
+				id: `go-mark-scroll-${i}`,
+				title: `&${i} mark`,
+				parentId: goToParentId,
+				contexts: ["all"],
+				listener: goToScrollMarkListener.bind(null, i - 1),
+			});
+		}
+	} else {
+		createContextMenu({
+			id: "add-mark-scroll-entry",
+			title: "&Add",
+			contexts: ["all"],
+			listener: addScrollMarkListener.bind(null, 0),
+			parentId,
 		});
 		createContextMenu({
-			id: `go-mark-scroll-${i}`,
-			title: `${i} mark`,
-			parentId: goToParentId,
+			id: "go-to-mark-scroll-entry",
+			title: "&Go",
 			contexts: ["all"],
-			listener: goToScrollMarkListener.bind(null, i - 1),
+			listener: goToScrollMarkListener.bind(null, 0),
+			parentId,
 		});
 	}
 }
