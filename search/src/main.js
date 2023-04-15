@@ -129,13 +129,14 @@ function createTab(item, text, index) {
 }
 
 function createPopup(item, text) {
+	const width = 725;
 	return browser.windows.create({
 		allowScriptsToClose: true,
 		url: makeUrl({ ...item, text }),
 		type: "popup",
 		height: 330,
-		width: 725,
+		width: width,
 		top: 0,
-		left: 320,
+		left: Math.max(Math.round((window.screen.width - width) / 2), 0),
 	});
 }
