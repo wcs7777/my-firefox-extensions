@@ -114,7 +114,7 @@
 			color: rgb(255, 255, 255);
 			background-color: rgba(0, 0, 0, .85);
 			font: ${fontSize}px/1.2 Arial, sens-serif;
-			z-index: 99999;
+			z-index: 9999999;
 		`,
 		});
 	}
