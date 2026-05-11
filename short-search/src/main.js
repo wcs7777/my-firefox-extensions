@@ -83,7 +83,7 @@ function storageChangedCB(_changes, areaName) {
 async function installedCB(details) {
 	if (details.temporary) {
 		console.clear();
-		console.log("Cleaning storage due to temporary installation");
+		console.log('Cleaning storage due to temporary installation');
 		await browser.storage.local.clear();
 	}
 }
