@@ -1,6 +1,1 @@
-sign.sh
-codes.txt
-prmv/
-pronunciation/
-data-pronunciation/
-chrome-pronunciation/
+**/web-ext-artifacts/
