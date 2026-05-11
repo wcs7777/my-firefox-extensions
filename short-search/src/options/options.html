@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Search Settings</title>
+	<link rel="stylesheet" href="options.css">
+</head>
+<body>
+	<main>
+
+		<div class="settings-section">
+			<h2>Add Engine</h2>
+			<div class="form-group">
+				<label for="addShortcut">Shortcut</label>
+				<input type="text" id="addShortcut" placeholder="e.g. g">
+			</div>
+			<div class="form-group">
+				<label for="addEngine">Engine</label>
+				<input type="text" id="addEngine" placeholder="e.g. https://www.google.com/search?q=%s">
+			</div>
+			<div class="center">
+				<button class="btn btn-primary" id="actionAddShortcut">Add</button>
+			</div>
+		</div>
+
+		<div class="settings-section">
+			<h2>Remove Engine</h2>
+			<div class="form-group">
+				<label for="removeEngine">Engine</label>
+				<select id="removeEngine">
+					<option value="g">g</option>
+				</select>
+			</div>
+			<div class="center">
+				<button class="btn btn-primary" id="actionRemoveEngine">Remove</button>
+			</div>
+		</div>
+
+		<div class="settings-section">
+			<h2>Default Engine</h2>
+			<div class="form-group">
+				<label for="defaultEngine">Engine</label>
+				<select id="defaultEngine">
+					<option value="g">g</option>
+				</select>
+			</div>
+			<div class="center">
+				<button class="btn btn-primary" id="actionSetDefaultEngine">Set</button>
+			</div>
+		</div>
+
+		<div class="settings-section">
+			<h2>JSON Settings</h2>
+			<div class="form-group">
+				<label for="settings">Settings</label>
+				<textarea id="settings" rows="20"></textarea>
+			</div>
+			<div class="center">
+				<button class="btn btn-primary" id="actionUpdateSettings">Update</button>
+			</div>
+		</div>
+
+	</main>
+
+	<dialog id="dialog" class="dialog">
+		<p id="dialogMessage" class="dialog-message">Message</p>
+		<form method="dialog">
+			<button class="btn btn-dialog" autofocus>OK</button>
+		</form>
+	</dialog>
+
+    <script type="module" src="./options.js"></script>
+</body>
+</html>
